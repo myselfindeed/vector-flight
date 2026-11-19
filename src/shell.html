@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#121718">
+  <meta name="description" content="驾驶 F-35B 从海岬号航母起飞，用雷达寻找同型敌机，进行一对一空中对战。">
+  <link rel="icon" href="data:,">
+  <title>矢量试飞 · 海岬号航母</title>
+  <style>/* @STYLE@ */</style>
+</head>
+<body>
+<main id="app">
+  <header class="topbar">
+    <div class="brand">
+      <span class="wingmark" aria-hidden="true"><i></i><i></i><i></i></span>
+      <div><b>海岬号</b><small>CAPE CARRIER</small></div>
+    </div>
+    <span class="top-divider"></span>
+    <div class="location"><canvas data-icon="pin"></canvas><span id="location">飞行甲板</span></div>
+    <div class="wind" title="甲板实测来风方向与风速"><i id="windArrow" aria-hidden="true">↑</i><span>风</span><b id="wind">252° / 09 kt</b></div>
+    <nav class="tools" aria-label="飞行设置">
+      <button id="comToggle" class="tool com-tool" aria-label="塔台通话" aria-controls="comPanel" aria-expanded="false" title="塔台通话（Y）"><canvas data-icon="radio"></canvas><span>塔台</span></button>
+      <button id="sound" class="tool" aria-label="开启音效" aria-pressed="false" title="开启音效"><canvas data-icon="mute"></canvas><span>音效</span></button>
+      <button id="help" class="tool" title="操作指南（H）" aria-label="操作指南"><canvas data-icon="keys"></canvas><span>操作指南</span></button>
+      <button id="pause" class="tool square" title="暂停（P）" aria-label="暂停"><canvas data-icon="pause"></canvas></button>
+    </nav>
+  </header>
+
+  <section id="stage" aria-label="三维试飞场景">
+    <canvas id="world" tabindex="0" aria-label="飞行画面，拖动环视，滚轮缩放"></canvas>
+    <div class="shade"></div>
+    <canvas id="visor" aria-hidden="true" hidden></canvas>
+    <div class="aircraft-title">
+      <div class="kicker"><i></i> FLIGHT TEST</div>
+      <h1>F-35B</h1>
+      <div class="aircraft-sub">舰载飞行试验</div>
+    </div>
+    <div id="compassWrap" aria-label="航向"><canvas id="compass"></canvas></div>
+    <div id="routeInfo" hidden>
+      <span class="route-symbol"></span><div><small>试飞航线</small><b id="routeLabel"></b></div>
+      <span id="routeRange"></span>
+    </div>
+    <div id="navPointer" hidden aria-hidden="true"><i></i><span></span></div>
+
+    <div id="targetMark" hidden aria-hidden="true"><i></i><span></span></div>
+    <div id="incident" class="incident" hidden role="status"><small>FLIGHT ENDED</small><b id="incidentTitle"></b><span id="incidentScore"></span><button id="retry" class="return-btn">重新上舰</button></div>
+    <div class="lower-left">
+      <div class="camera-tools">
+        <button id="camera" class="camera-btn" title="切换视角（C）"><canvas data-icon="camera"></canvas><span id="cameraLabel">外部环视</span><kbd>C</kbd></button>
+        <button id="cockpitToggle" class="camera-btn" title="进入座舱（1）" aria-pressed="false"><canvas data-icon="cockpit"></canvas><span id="cockpitLabel">进入座舱</span><kbd>1</kbd></button>
+        <button id="observerToggle" class="camera-btn" title="开关观察小窗（O）" aria-controls="observerPanel" aria-pressed="false"><canvas data-icon="pip"></canvas><span>小窗</span><kbd>O</kbd></button>
+      </div>
+      <div class="radio" role="status" aria-live="polite"><span class="radio-from"><span class="radio-bars"><i></i><i></i><i></i><i></i></span>舰桥</span><span id="radioText">驻车制动已接合，发动机关闭。</span></div>
+    </div>
+    <button id="monitor" title="放大喷口特写" aria-label="放大喷口特写" aria-pressed="false">
+      <span class="monitor-head"><span class="monitor-title"><i></i>喷口监视器</span><span class="monitor-head-right"><span>LIVE</span><canvas data-icon="expand"></canvas></span></span>
+      <span id="monitorView" class="monitor-view" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+      <span class="monitor-foot"><span>偏转角</span><span class="angle-meter" id="angleMeter"></span><strong><span id="angle">00</span>°</strong></span>
+    </button>
+    <section id="flightDisplay" class="flight-display" aria-label="主飞行仪表" hidden>
+      <div class="monitor-head"><span class="monitor-title"><i></i>主飞行显示</span><span class="display-code">PFD</span></div>
+      <canvas id="pfd" aria-label="姿态、空速、高度、航向和升降率"></canvas>
+    </section>
+    <section id="observerPanel" class="observer-panel" aria-label="实时观察小窗" hidden>
+      <div class="monitor-head"><span class="monitor-title"><i></i><span id="observerName">舰桥机位</span></span><button id="observerClose" aria-label="关闭观察小窗"><canvas data-icon="close"></canvas></button></div>
+      <div id="observerView" class="observer-view" aria-hidden="true"><i></i><i></i></div>
+      <div class="observer-foot"><span id="observerSubject">VECTOR 21</span><button id="observerNext" title="切换观察机位">切换机位 ↻</button></div>
+    </section>
+    <div id="comCaption" class="com-caption" hidden><strong id="captionRole"></strong><span id="captionText" lang="en"></span></div>
+    <div id="touchStick" class="touch-stick touch-control" role="application" aria-label="拖动摇杆，前后移动与转向"><i></i></div>
+    <div class="touch-lift touch-control">
+      <button id="rudderLeft" class="manual-touch" aria-label="左偏航">左舵</button>
+      <button id="rudderRight" class="manual-touch" aria-label="右偏航">右舵</button>
+      <button id="touchUp" aria-label="爬升"><canvas data-icon="up"></canvas><span class="manual-touch">油门＋</span></button>
+      <button id="touchDown" aria-label="下降"><canvas data-icon="down"></canvas><span class="manual-touch">油门－</span></button>
+    </div>
+  </section>
+
+  <section id="rangeControls" class="range-card" data-mission="duel" aria-label="飞行任务">
+    <div class="range-heading"><div class="mission-tabs" role="group" aria-label="飞行任务"><button id="duelTab" aria-pressed="true">对战</button><button id="practiceTab" aria-pressed="false">靶场</button></div><span class="range-score"><span id="scoreLabel">限时</span> <b id="hits">1:30</b></span></div>
+    <div class="range-selection">
+      <div class="range-current"><span class="target-led"></span><b id="targetValue">F-35B · 敌机 02</b></div>
+      <button id="target" hidden><span id="targetAction"></span><kbd>T</kbd></button>
+    </div>
+    <div id="shields" class="shield-pair" hidden>
+      <span>我方 <meter id="ownShield" aria-label="我方护盾" min="0" max="3" value="3"></meter></span>
+      <span>敌机 <meter id="enemyShield" aria-label="敌机护盾" min="0" max="3" value="3"></meter></span>
+    </div>
+    <button id="fire" title="起飞对战（J）"><canvas data-icon="takeoff"></canvas><span id="actionLabel">起飞对战</span><strong id="ammo">1v1</strong><kbd>J</kbd></button>
+    <button id="flare" title="来袭脉冲接近时释放干扰弹（U）" aria-keyshortcuts="U" hidden disabled><span id="flareLabel">干扰弹待命</span><kbd>U</kbd></button>
+    <div id="rangeHint" role="status" aria-live="polite">击破敌机的三格护盾即可获胜。</div>
+  </section>
+
+  <section id="comPanel" class="com-panel" aria-labelledby="comTitle" hidden>
+    <div class="com-head"><div><small>COM 1</small><h2 id="comTitle" lang="en">Cape Tower</h2></div><button id="comVoice" class="com-voice" aria-pressed="false">开启声音</button><button id="comClose" class="tool square" aria-label="关闭塔台通话"><canvas data-icon="close"></canvas></button></div>
+    <div class="com-log" id="comLog" role="log" aria-label="英文通话记录" lang="en"></div>
+    <div class="com-channel"><i></i><span id="comStatus">频道空闲</span><span lang="en">VECTOR 21</span></div>
+    <div id="comCommands" class="com-commands">
+      <button data-call="position"><kbd>1</kbd><span>报告位置<small lang="en">Position report</small></span></button>
+      <button data-call="altitude"><kbd>2</kbd><span>报告高度<small lang="en">Altitude report</small></span></button>
+      <button data-call="wind"><kbd>3</kbd><span>询问风况<small lang="en">Request wind</small></span></button>
+      <button data-call="check"><kbd>4</kbd><span>检查电台<small lang="en">Radio check</small></span></button>
+      <button data-call="recovery" title="申请返舰并接通自动返航"><kbd>5</kbd><span>申请返舰<small lang="en">Request recovery</small></span></button>
+      <button data-call="ack"><kbd>6</kbd><span>确认收到<small lang="en">Roger</small></span></button>
+      <button data-call="repeat"><kbd>7</kbd><span>请求重说<small lang="en">Say again</small></span></button>
+    </div>
+  </section>
+
+  <section class="console" aria-label="飞行仪表和控制">
+    <div class="system-strip">
+      <div class="systems">
+        <button id="assist" role="switch" aria-checked="false" aria-label="辅助操控" title="开启辅助操控，松杆自动改平（M）">辅助操控 <i aria-hidden="true"></i><b id="assistValue">关</b><kbd>M</kbd></button>
+        <button id="engine" title="启动发动机滑行（E）"><span id="engineActionLabel">启动滑行</span> <b id="engineValue">关闭</b></button>
+        <button id="flaps" title="循环襟翼位置（F）">襟翼 <b id="flapValue">自动 0°</b></button>
+        <button id="gear" title="循环起落架指令（G）">起落架 <b id="gearValue">放下</b></button>
+        <span class="fuel">燃油 <b id="fuel">100%</b></span>
+      </div>
+      <button id="inspect" class="inspect" title="静态检查矢量喷口（N）">检查喷口 <kbd>N</kbd></button>
+      <div id="aeroControls" class="aero-controls" aria-label="特技飞行" hidden>
+        <span class="load-value"><b id="loadFactor">1.0</b> G</span>
+        <button id="aeroRoll" title="向转向一侧做完整横滚（Q）">横滚 <kbd>Q</kbd></button>
+        <button id="aeroLoop" title="做一个垂直筋斗（K）">筋斗 <kbd>K</kbd></button>
+        <button id="boost" title="接通或关闭平飞加力（X）" aria-pressed="false">加力 <kbd>X</kbd></button>
+      </div>
+    </div>
+    <div class="instrument-strip">
+      <div class="readout mode">
+        <div class="readout-label">飞行模式 <span>MODE</span></div><b class="mode-value"><i></i><span id="mode">地面待命</span></b>
+      </div>
+      <div class="readout"><div class="readout-label">离地高度 <span>ALT</span></div><div class="value"><b id="alt">000</b><em>m</em></div></div>
+      <div class="readout"><div class="readout-label">地速 <span>GS</span></div><div class="value"><b id="speed">000</b><em>km/h</em></div></div>
+      <div class="readout vs"><div class="readout-label">升降率 <span>V/S</span></div><div class="value"><b id="climb">0.0</b><em>m/s</em></div></div>
+      <div class="readout thrust"><div class="readout-label">引擎推力 <span>THR</span></div><div class="thrust-body"><div id="thrustBars" class="thrust-bars"></div><b id="thrust">0%</b></div></div>
+      <div class="actions">
+        <button id="secondary" class="return-btn" title="垂直起飞（V）"><canvas data-icon="vector"></canvas><span>垂直起飞</span></button>
+        <button id="primary" class="primary"><canvas data-icon="takeoff"></canvas><span id="primaryLabel">滑跑起飞</span><span id="primaryKey" class="action-key">SPACE</span></button>
+      </div>
+    </div>
+    <div class="key-strip">
+      <div class="key-hints"><span><kbd>W</kbd><kbd>S</kbd> 油门</span><span><kbd>A</kbd><kbd>D</kbd><span id="turnHint">转向</span></span><span><kbd>↑</kbd><kbd>↓</kbd> 俯仰</span><span id="yawHint" hidden><kbd>←</kbd><kbd>→</kbd> 偏航</span><span><kbd>B</kbd> 刹车</span><span><kbd>V</kbd> 垂直模式</span><span><kbd>L</kbd> 返舰</span></div>
+      <span class="orbit-hint"><canvas data-icon="mouse"></canvas> 拖动环视 <i></i> 滚轮缩放</span>
+    </div>
+  </section>
+
+  <div id="modal" class="overlay" hidden>
+    <section role="dialog" aria-modal="true" aria-labelledby="dialogTitle" class="panel">
+      <div class="panel-head"><span class="kicker"><i></i><span id="dialogTag">FLIGHT MANUAL</span></span><button id="closeModal" class="tool square" aria-label="关闭"><canvas data-icon="close"></canvas></button></div>
+      <h2 id="dialogTitle">操作指南</h2>
+      <div id="helpContent">
+        <p>点「起飞对战」迎战另一架 F-35B。雷达上方是机头方向。转向敌机，进入射程并对准后按 J 或点「发射脉冲」。双方各有三格护盾，先击破对方护盾获胜。90 秒结束时，护盾较多的一方获胜，护盾相同则平局。</p>
+        <dl class="controls-list">
+          <div><dt><kbd>E</kbd> · <kbd>W</kbd> / <kbd>S</kbd> · <kbd>B</kbd></dt><dd>启动发动机 · 增减油门 · 甲板制动</dd></div>
+          <div><dt><kbd>空格</kbd> / <kbd>V</kbd></dt><dd>甲板上滑跑起飞 / 垂直起飞</dd></div>
+          <div><dt><kbd>M</kbd></dt><dd>开关辅助操控。手动平飞松杆保持姿态，辅助平飞松杆自动改平。</dd></div>
+          <div><dt><kbd>A</kbd> / <kbd>D</kbd> · <kbd>↑</kbd> / <kbd>↓</kbd></dt><dd>手动平飞连续滚转 · 拉起 / 压低机头</dd></div>
+          <div><dt><kbd>←</kbd> / <kbd>→</kbd></dt><dd>手动平飞控制方向舵，甲板和辅助飞行控制转向</dd></div>
+          <div><dt><kbd>空格</kbd> / <kbd>Shift</kbd> · <kbd>V</kbd></dt><dd>空中爬升 / 下降 · 平飞与悬停切换</dd></div>
+          <div><dt><kbd>F</kbd> / <kbd>G</kbd> · <kbd>N</kbd></dt><dd>襟翼 / 起落架 · 停机时检查喷口</dd></div>
+          <div><dt><kbd>J</kbd></dt><dd>对战中发射脉冲，靶场中向选中的练习靶发射训练弹</dd></div>
+          <div><dt><kbd>U</kbd></dt><dd>脉冲来袭时释放干扰弹，敌机也能用干扰弹避开你的脉冲。</dd></div>
+          <div><dt><kbd>Y</kbd> · <kbd>1–7</kbd></dt><dd>塔台随飞行阶段自动通话，静音时显示字幕。打开电台可查看记录或主动呼叫。</dd></div>
+          <div><dt><kbd>O</kbd> · <kbd>T</kbd></dt><dd>开关观察小窗 · 对战时查看敌机，靶场中换靶</dd></div>
+          <div><dt><kbd>Q</kbd> / <kbd>K</kbd> · <kbd>X</kbd></dt><dd>横滚 / 筋斗 · 切换平飞加力</dd></div>
+          <div><dt><kbd>1</kbd> · 拖动 · 双击</dt><dd>进出座舱 · 转头观察 · 视线回正</dd></div>
+          <div><dt><kbd>L</kbd> · <kbd>C</kbd> · <kbd>P</kbd></dt><dd>自动返舰 · 切换镜头 · 暂停</dd></div>
+        </dl>
+        <p class="touch-note">手动平飞时，左侧摇杆控制滚转和俯仰，右侧按钮控制方向舵和油门。悬停或开启辅助时，摇杆控制前后和转向，箭头控制升降。</p>
+      </div>
+      <p id="pauseContent" hidden>飞行、航线进度和镜头已暂停。</p>
+      <div class="panel-actions"><button id="resume" class="primary"><canvas data-icon="play"></canvas><span>返回试飞场</span></button><button id="reset" class="return-btn" hidden>回到起点</button></div>
+    </section>
+  </div>
+  <div id="loading" class="loading" role="status"><span class="wingmark"><i></i><i></i><i></i></span><b>正在进入海岬号飞行甲板</b></div>
+  <noscript>请启用 JavaScript 以运行三维飞行场景。</noscript>
+</main>
+<!-- @LICENSES@ -->
+<script>/* @THREE@ */</script>
+<script>
+/* @PROGRAM@ */
+</script>
+</body>
+</html>
