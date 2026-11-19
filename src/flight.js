@@ -15,6 +15,8 @@
   let sim, state, effects, range, pfd, cockpit, visor, wingTrails;
   let comms,duel,radar,observer,mission="duel",duelQueued=false;
   let observerMode="",beforeDuelView="",restoreDuelView=false,observerRect={x:0,y:0,w:0,h:0};
+  let wreckSmokeAt=0;
+  const wreckOutlet=new T.Vector3();
   const observerLabels={tower:"舰桥机位",wing:"伴飞机位",rival:"对手机位"};
   let headYaw=0,headPitch=-.06,rangeNote="",rangeFeedback="",noteExpires=0;
   const headRotation=new T.Quaternion(),headAngles=new T.Euler(0,0,0,"YXZ");
@@ -85,7 +87,7 @@
   }
   function reset(){
     resetInput();sim.reset();effects.reset();range.reset();wingTrails.reset();cockpit.reset();jet.root.visible=true;
-    mission="duel";duelQueued=false;duel.reset();beforeDuelView="";restoreDuelView=false;setObserver("");comms.reset();
+    mission="duel";duelQueued=false;duel.reset();wreckSmokeAt=0;beforeDuelView="";restoreDuelView=false;setObserver("");comms.reset();
     rangeNote=rangeFeedback="";noteExpires=0;
     tripStarted=false;gateIndex=0;positionGate();selectCamera(0);cameraReady=false;lastShadowPose=NaN;
     hud.radio("驻车制动已接合，发动机关闭。可启动滑行，或直接选择起飞方式。");refreshHUD();
@@ -117,6 +119,7 @@
     }
   }
   function primaryAction(){
+    if(duel.status==="crashing"&&state.shotDown)return;
     if(state.phase==="crashed"){reset();return;}
     if(state.phase==="roll"){sim.brake();return;}
     if(state.onGround){sim.launch("roll");return;}
@@ -138,7 +141,7 @@
     rangeNote=rangeFeedback="";noteExpires=0;refreshHUD();
   }
   function fire(){
-    if(state.phase==="crashed")return;
+    if(state.phase==="crashed"||state.phase==="falling"||duel.status==="crashing")return;
     if(mission==="duel"){
       if(duelQueued||state.phase==="return"||state.phase==="falling")return;
       if(duel.status==="active")duel.fire(state);
@@ -161,6 +164,10 @@
   function duelEvent(kind,msg){
     if(kind==="start"){
       beforeDuelView=observerMode;restoreDuelView=true;duelQueued=false;setObserver("rival");
+    }else if(kind==="playerDown"){
+      sim.shootDown();
+      if(cameraIndex===3)selectCamera(0);
+      if(observerMode==="rival")setObserver("wing");
     }else if(kind==="end"&&restoreDuelView){
       restoreDuelView=false;setObserver(beforeDuelView);
     }else if(kind==="end"&&observerMode==="rival"){
@@ -168,9 +175,13 @@
     }
     hud.radio(msg);
     if(kind==="score")audio.cue("hit");
-    else if(kind==="launch")audio.cue("launch");
+    else if(kind==="launch"||kind==="incoming")audio.cue("missile");
+    else if(kind==="flare")audio.cue("flare");
+    else if(kind==="playerDown"||kind==="rivalDown")audio.cue("knockout");
+    else if(kind==="splash")audio.cue("water");
+    else if(kind==="groundImpact")audio.cue("crash");
     else if(kind==="evade"||kind==="cue")audio.cue("gate");
-    else if(kind==="start"||kind==="end")audio.cue("mode");
+    else if(kind==="start"||(kind==="end"&&duel.playerHP>0&&duel.rivalHP>0))audio.cue("mode");
   }
   function selectMissionAction(){
     if(mission==="range"){pickTarget();return;}
@@ -343,7 +354,7 @@
     jet.root.quaternion.copy(state.attitudeQuaternion);
     jet.update(state);jet.root.updateMatrixWorld(true);
     exhaust.update(state);wingTrails.update(state,jet.root,dt);groundLight.update(state);coast.update(state);updateCameras(dt);
-    route.visible=duel.status!=="active"&&tripStarted && ["free","departure"].includes(state.phase) && state.mode==="cruise" && gateIndex<gates.length;
+    route.visible=duel.status!=="active"&&duel.status!=="crashing"&&tripStarted && ["free","departure"].includes(state.phase) && state.mode==="cruise" && gateIndex<gates.length;
     renderer.setScissorTest(false);renderer.setViewport(0,0,viewW,viewH);scene.background=clearSky;
     // Keep the deck shadow static until some part of the parked silhouette actually moves.
     const parkedPose=state.nozzle+state.gear*2+state.flap*3+range.ammo*4;
@@ -362,7 +373,7 @@
       renderer.render(scene,monitorCam);exhaust.render(renderer,monitorCam);
       renderer.setScissorTest(false);renderer.setViewport(0,0,viewW,viewH);scene.background=clearSky;
     }else if(!$("observerPanel").hidden){
-      observer.render(renderer,scene,jet,state,duel.rival,observerMode,observerRect);
+      observer.render(renderer,scene,jet,state,duel.rival,observerMode,observerRect,duel.status==="crashing");
     }else if(!$("flightDisplay").hidden)pfd.draw(state);
     hud.heading(state.displayHeading);updatePointer();updateTargetMarker();
   }
@@ -379,6 +390,7 @@
     mark.style.left=(50+50*routeProjection.x)+"%";mark.style.top=(50-50*routeProjection.y)+"%";
     const match=mission==="duel";
     mark.classList.toggle("enemy",match);
+    mark.classList.toggle("label-left",(1-routeProjection.x)*.5*viewW<112);
     mark.classList.toggle("aligned",match&&duel.inRange&&duel.aligned);
     const label=match?(duel.inRange&&duel.aligned?"已对准 · ":"")+"敌机 02":target.name;
     if(mark.lastElementChild.textContent!==label)mark.lastElementChild.textContent=label;
@@ -403,56 +415,67 @@
     pointer.lastElementChild.textContent=Math.round(dist)+" m";pointer.hidden=false;
   }
   function updateTrainingHud(ground,crashed){
-    const match=mission==="duel",active=duel.status==="active",finished=duel.status==="finished";
+    const match=mission==="duel",active=duel.status==="active",crashing=duel.status==="crashing",finished=duel.status==="finished";
     $("duelTab").setAttribute("aria-pressed",String(match));$("practiceTab").setAttribute("aria-pressed",String(!match));
     const card=$("rangeControls");card.dataset.mission=mission;
     radar.update(state,match,active?duel.rival:null);
+    stage.classList.toggle("wreck-view",crashing);
     $("target").hidden=match&&!active&&!duelQueued;
-    $("shields").hidden=!match||(!active&&!finished);
+    $("aircraftCondition").hidden=!match||(!active&&!crashing&&!finished);
     $("flare").hidden=!match||!active;
     $("ammo").hidden=match;
     if(match){
-      const seconds=finished?Math.round(duel.maxTime-duel.timeLeft):Math.ceil(duel.timeLeft);
+      const decided=crashing||finished;
+      const seconds=decided?Math.round(duel.maxTime-duel.timeLeft):Math.ceil(duel.timeLeft);
       const clock=Math.floor(seconds/60)+":"+String(seconds%60).padStart(2,"0");
-      hud.write("scoreLabel",finished?"用时":active?"剩余":"限时");hud.write("hits",clock);
+      hud.write("scoreLabel",decided?"用时":active?"剩余":"限时");hud.write("hits",clock);
       hud.write("targetValue",finished?duel.result:"F-35B · 敌机 02");
       hud.write("targetAction",active?"退出":"取消");$("target").disabled=false;
       $("target").title=active?"退出本局对战":"取消离舰后的对战";
-      $("ownShield").value=duel.playerHP;$("enemyShield").value=duel.rivalHP;
-      const unavailable=crashed||["falling","return"].includes(state.phase);
-      const action=active?(duel.readyToFire?"发射脉冲":"充能 "+duel.cooldown.toFixed(1)+" 秒"):
-        duelQueued?"等待离舰":ground?"起飞对战":finished?"再来一局":"开始对战";
+      const condition=[crashing&&duel.stage==="falling"?"失控":"坠毁","重损","受损","完好"];
+      for(const [id,hp] of [["ownCondition",duel.playerHP],["enemyCondition",duel.rivalHP]]){
+        const node=$(id);
+        if(node.textContent!==condition[hp])node.textContent=condition[hp];
+        if(node.dataset.hp!==String(hp))node.dataset.hp=String(hp);
+      }
+      const unavailable=crashing||crashed||["falling","return"].includes(state.phase);
+      const action=active?(duel.readyToFire?"发射导弹":"待发 "+duel.cooldown.toFixed(1)+" 秒"):
+        crashing?(duel.playerHP===0?"我机":"敌机")+(duel.stage==="falling"?"坠落中":"已坠毁"):
+        crashed?"本局结束":duelQueued?"等待离舰":ground?"起飞对战":finished?"再来一局":"开始对战";
       hud.write("actionLabel",action);
       $("fire").disabled=unavailable||duelQueued||(active&&!duel.readyToFire);
-      $("fire").title=active?"朝机头方向发射脉冲（J）":"开始一对一空战（J）";
-      hud.buttonIcon($("fire"),active?"target":ground?"takeoff":"play");
+      $("fire").title=active?"发射导弹（J）":crashing||crashed?action:"开始一对一空战（J）";
+      $("fire").querySelector("kbd").hidden=crashing||crashed;
+      hud.buttonIcon($("fire"),active?"launch":ground?"takeoff":"play");
       if(active){
         $("flare").disabled=!duel.canFlare;
         const cooldown=Math.ceil(duel.flareCooldown),label=$("flareLabel");
         const text=cooldown?"干扰弹 · "+cooldown+" 秒":duel.canFlare?"释放干扰弹":"干扰弹待命";
         if(label.textContent!==text)label.textContent=text;
       }
-      const hint=active?(duel.canFlare?"脉冲来袭！按 U 或点「释放干扰弹」。":duel.message):unavailable?(crashed?"重新上舰后可再次对战。":"恢复自由飞行后可开始对战。"):
-        finished?"本局护盾　我方 "+duel.playerHP+" / 敌机 "+duel.rivalHP:
-        duelQueued?"离舰后敌机入场。":"一对一空战，先击破敌机的三格护盾获胜。";
+      const hint=active?(duel.canFlare?"导弹来袭！按 U 或点「释放干扰弹」。":duel.message):crashing?duel.message:
+        unavailable?(crashed?"重新上舰后可再次对战。":"恢复自由飞行后可开始对战。"):
+        finished?"本局结束，可开始下一局。":duelQueued?"离舰后敌机入场。":"三次命中可击落敌机。";
       hud.write("rangeHint",hint);
-      card.dataset.feedback=active?(duel.stage==="attack"?"incoming":duel.readyToFire&&duel.inRange&&duel.aligned?"ready":""):finished?duel.outcome:"";
+      card.dataset.feedback=active?(duel.stage==="attack"?"incoming":duel.readyToFire&&duel.inRange&&duel.aligned?"ready":""):decided?duel.outcome:"";
       return;
     }
-    const complete=range.hits===range.total,newRound=ground&&complete,air=!ground&&!crashed;
+    $("fire").querySelector("kbd").hidden=false;
+    const complete=range.hits===range.total,newRound=ground&&complete,air=!ground&&!crashed&&state.phase!=="falling";
     hud.write("scoreLabel","命中");hud.write("actionLabel","发射训练弹");hud.buttonIcon($("fire"),"launch");
     hud.write("targetValue",range.selected?.name||(complete?"本轮完成":"训练弹在途"));
     hud.write("targetAction",newRound?"重新布靶":"换靶");hud.write("ammo",String(range.ammo));hud.write("hits",range.hits+"/"+range.total);
     $("fire").disabled=!air||range.ammo===0||!range.selected;$("target").disabled=crashed||(!range.selected&&!newRound);
     $("fire").title="向选中的练习靶发射（J）";$("target").title="选择下一练习靶（T）";
     const recent=air&&!!rangeNote&&state.time<noteExpires;
-    const hint=crashed?"本次试飞已结束":recent?rangeNote:complete?(ground?"可重新布置岛上靶":"全靶命中，返舰可开始下一轮"):ground?"离舰后即可发射":range.inFlight?"训练弹飞行中":"已选中岛上靶，点发射即可";
+    const hint=crashed?"本次试飞已结束":state.phase==="falling"?"飞机正在坠落":recent?rangeNote:complete?(ground?"可重新布置岛上靶":"全靶命中，返舰可开始下一轮"):ground?"离舰后即可发射":range.inFlight?"训练弹飞行中":"已选中岛上靶，点发射即可";
     hud.write("rangeHint",hint);card.dataset.feedback=recent?rangeFeedback:complete?"hit":"";
   }
   function refreshHUD(){
     const phase=state.phase,ground=state.onGround,crashed=phase==="crashed",returning=phase==="return";
     const air=!ground&&!crashed, p=state.position, takingOff=phase==="liftoff"&&ground;
-    const labels={parked:"甲板待命",taxi:"甲板滑行",roll:"甲板滑跑",departure:"离舰爬升",liftoff:"垂直起飞",return:"自动返舰",falling:"脱离甲板",crashed:"试飞结束"};
+    const shotDown=state.shotDown,ending=duel.status==="crashing";
+    const labels={parked:"甲板待命",taxi:"甲板滑行",roll:"甲板滑跑",departure:"离舰爬升",liftoff:"垂直起飞",return:"自动返舰",falling:shotDown?"失控坠落":"脱离甲板",crashed:shotDown?"已坠毁":"试飞结束"};
     app.dataset.phase=phase;app.classList.toggle("airborne",air);
     hud.write("mode",state.maneuver==="loop"?"垂直筋斗":state.maneuver==="roll"?"横滚机动":labels[phase]||(state.mode==="hover"?"悬停飞行":state.manualActive?"手动飞行":"巡航平飞"));
     const direct=manualLayout(),assist=$("assist");
@@ -474,7 +497,7 @@
     hud.write("fuel",Math.round(state.fuel)+"%");
     hud.write("flapValue",(state.flapAuto?"自动 ":"")+Math.round(state.flap*39)+"°");
     hud.write("gearValue",state.gear>.97?"放下":state.gear<.03?"收起":"作动中");
-    hud.write("engineValue",phase==="parked"||crashed?"关闭":state.engine<.98?"启动中":"运转");
+    hud.write("engineValue",shotDown?"熄火":phase==="parked"||crashed?"关闭":state.engine<.98?"启动中":"运转");
     const engineLabel=phase==="parked"?"启动滑行":phase==="roll"||(phase==="taxi"&&state.speed>.5)?"甲板制动":phase==="taxi"?"关闭引擎":"发动机";
     hud.write("engineActionLabel",engineLabel);$("engine").title=engineLabel+(engineLabel==="甲板制动"?"（B）":"（E）");
     $("engine").disabled=!ground||takingOff;$("gear").disabled=ground||crashed;$("flaps").disabled=crashed;
@@ -491,18 +514,22 @@
     $("boost").setAttribute("aria-pressed",String(Boolean(state.boostCommand)));
     updateTrainingHud(ground,crashed);$("observerToggle").disabled=crashed;
     hud.updateMeters(state.nozzle,state.thrust);
-    primary.disabled=takingOff||phase==="falling";
-    hud.write("primaryLabel",crashed?"重新上舰":phase==="roll"?"中止滑跑":takingOff?"垂直离舰中":ground?"滑跑起飞":returning?"接管悬停":state.mode==="hover"?"转换平飞":"切换悬停");
+    primary.disabled=takingOff||phase==="falling"||(ending&&crashed);
+    hud.write("primaryLabel",crashed?(ending?"已坠毁":"重新上舰"):shotDown?"机体失控":phase==="roll"?"中止滑跑":takingOff?"垂直离舰中":ground?"滑跑起飞":returning?"接管悬停":state.mode==="hover"?"转换平飞":"切换悬停");
     hud.write("primaryKey",crashed?"R":phase==="roll"?"B":ground?"SPACE":"V");
+    $("primaryKey").hidden=shotDown&&(phase==="falling"||ending);
     hud.buttonIcon(primary,ground?"takeoff":state.mode==="cruise"?"hover":"cruise");
     secondary.hidden=crashed||returning||phase==="falling"||phase==="roll"||takingOff;
     const secondaryText=ground?"垂直起飞":"返舰着陆";
     if(secondary.lastElementChild.textContent!==secondaryText)secondary.lastElementChild.textContent=secondaryText;
     secondary.title=ground?"垂直起飞（V）":"自动返舰着陆（L）";hud.buttonIcon(secondary,ground?"vector":"land");
     updatePanels();
-    $("incident").hidden=!crashed;
-    if(crashed){hud.write("incidentTitle",state.crashReason);hud.write("incidentScore","航标 "+gateIndex+"/3 · 靶场命中 "+range.hits+"/"+range.total);}
-    const activeRoute=duel.status!=="active"&&air&&["free","departure"].includes(phase)&&state.mode==="cruise";
+    $("incident").hidden=!crashed||ending;
+    if(crashed&&!ending){
+      hud.write("incidentTitle",state.crashReason);
+      hud.write("incidentScore",shotDown&&duel.result?duel.result:"航标 "+gateIndex+"/3 · 靶场命中 "+range.hits+"/"+range.total);
+    }
+    const activeRoute=duel.status!=="active"&&!ending&&air&&["free","departure"].includes(phase)&&state.mode==="cruise";
     $("routeInfo").hidden=!activeRoute;
     if(activeRoute) {
       hud.write("routeLabel",gateIndex<gates.length?"航标 "+String(gateIndex+1).padStart(2,"0")+" / 03":"航线已完成");
@@ -522,6 +549,10 @@
       sim.step(step,input);range.step(state,step);checkGate(x,y,z);
       if(duelQueued&&!state.onGround&&["free","departure","liftoff"].includes(state.phase)&&state.agl>3)duel.start(state);
       duel.step(state,step);
+      if(state.shotDown&&state.phase==="falling"&&state.time>=wreckSmokeAt){
+        wreckOutlet.set(1.25,.30,3.1).applyQuaternion(state.attitudeQuaternion).add(state.position);
+        effects.trail(wreckOutlet,state.windX,state.windZ);wreckSmokeAt=state.time+.065;
+      }
       effects.update(step,state.windX,state.windZ);
     }
     state.dt=dt;audio.update(state);comms.step(dt);draw(dt);
@@ -597,7 +628,7 @@
         const actions={KeyV:()=>sim.changeMode(),KeyL:requestReturn,KeyC:cycleCamera,KeyO:toggleObserver,Digit1:toggleCockpit,Numpad1:toggleCockpit,
           KeyQ:()=>flyManeuver("roll"),KeyK:()=>flyManeuver("loop"),KeyX:boost,KeyM:toggleAssist,
           KeyB:()=>{pressed.add("KeyB");sim.brake();},KeyE:engineAction,KeyF:()=>sim.flap(),KeyG:()=>sim.gear(),
-          KeyN:()=>sim.testNozzle(),KeyJ:fire,KeyU:deployFlare,KeyT:()=>{if(mission==="range")pickTarget();else if(duel.status==="active")setObserver("rival");},KeyR:()=>{if(state.phase==="crashed")reset();},
+          KeyN:()=>sim.testNozzle(),KeyJ:fire,KeyU:deployFlare,KeyT:()=>{if(mission==="range")pickTarget();else if(duel.status==="active")setObserver("rival");},KeyR:()=>{if(state.phase==="crashed"&&duel.status!=="crashing")reset();},
           KeyH:()=>openModal("help"),Slash:()=>openModal("help"),KeyP:()=>openModal("pause"),Escape:()=>openModal("pause")};
         if(actions[key]){e.preventDefault();actions[key]();}
       }
@@ -675,7 +706,7 @@
     exhaust=createExhaust(T,jet.nozzleExit);groundLight=createGroundLight(T,scene,coast);
     sim=createFlightSimulator(T,coast,flightEvent);state=sim.state;effects=createRangeEffects(T,scene);
     range=createTrainingRange(T,scene,coast,jet,effects,notify);pfd=createPilotDisplay($("pfd"));
-    duel=createFlightDuel(T,scene,coast,duelEvent,jet);radar=createDuelRadar(stage);observer=createFlightObserver(T,coast);
+    duel=createFlightDuel(T,scene,coast,duelEvent,jet,effects);radar=createDuelRadar(stage);observer=createFlightObserver(T,coast);
     comms=createTowerConsole(state,sim.home,()=>sim.returnHome(),toggleSound,()=>canvas.focus({preventScroll:true}));
     cockpit=createFlightCockpit(T,scene.environment,coast.sunDirection);visor=createFlightVisor($("visor"),T);wingTrails=createWingTrails(T,scene);
     jet.root.traverse(o=>o.layers.enable(1));scene.traverse(o=>{if(o.isLight)o.layers.enable(1);});

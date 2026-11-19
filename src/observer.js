@@ -9,9 +9,28 @@ function createFlightObserver(T, coast){
   quad.frustumCulled=false;screen.add(quad);
   const pos=new T.Vector3(),aim=new T.Vector3(),forward=new T.Vector3(),right=new T.Vector3(),worldUp=new T.Vector3(0,1,0);
   const oldViewport=new T.Vector4(),oldScissor=new T.Vector4();
-  let lastMode="",lastTime=-Infinity;
-  function reset(){lastMode="";lastTime=-Infinity;}
-  function render(renderer,scene,jet,s,rival,mode,rect){
+  const wreckOffsets=[[-23,16,21],[23,16,21],[-23,19,-21],[23,19,-21],[1,42,8]];
+  const sightline=new T.Vector3();
+  let lastMode="",lastTime=-Infinity,wreckView=0;
+  function reset(){lastMode="";lastTime=-Infinity;wreckView=0;}
+  function frameWreck(){
+    aim.y+=1.5;
+    // Keep the same side of the action until terrain or the carrier blocks the view.
+    for(let attempt=0;attempt<wreckOffsets.length;attempt++){
+      pos.fromArray(wreckOffsets[wreckView]).add(aim);
+      pos.y=Math.max(pos.y,coast.groundHeight(pos.x,pos.z)+3);
+      let clear=true;
+      for(let i=1;i<=10;i++){
+        sightline.lerpVectors(aim,pos,i/10);
+        const {x,y,z}=sightline;
+        if(y<coast.groundHeight(x,z)+.8||coast.obstacleAt(x,y,z,1.4)){clear=false;break;}
+      }
+      if(clear||attempt===wreckOffsets.length-1)break;
+      wreckView=(wreckView+1)%wreckOffsets.length;
+    }
+    eye.fov=48;
+  }
+  function render(renderer,scene,jet,s,rival,mode,rect,crashing=false){
     if(rect.w<2||rect.h<2)return;
     const aspect=rect.w/rect.h;
     const w=Math.min(352,Math.max(144,Math.round(rect.w/16)*16)),h=Math.max(70,Math.round(w/aspect));
@@ -28,6 +47,9 @@ function createFlightObserver(T, coast){
           pos.set(12.8,12.5,-13.4);
           const distance=pos.distanceTo(aim);
           eye.fov=T.MathUtils.clamp(T.MathUtils.radToDeg(2*Math.atan2(15,Math.max(8,distance))),.45,58);
+        }else if(crashing){
+          // A level camera holds the tumbling airframe and its impact in the inset.
+          frameWreck();
         }else{
           forward.set(0,0,-1).applyQuaternion(subject.quaternion);
           right.crossVectors(forward,worldUp);

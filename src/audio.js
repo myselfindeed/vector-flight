@@ -175,16 +175,20 @@ function createFlightAudio() {
     gate: [622, 831]
   };
 
-  // Duration, noise filter start/end, noise level, and pitch of the short transient.
+  // Each layer specifies duration, noise filter sweep, level and body pitch sweep.
+  // A second layer can start later and swell for longer than the initial strike.
   const impacts = {
-    hit:    [.16, 2600, 570, .25, 310, 120],
-    crash:  [.68, 1120, 100, .58, 112, 39],
-    launch: [.27, 430, 1790, .22, 190, 480],
-    water:  [.59, 1730, 280, .43, 169, 64]
+    hit:     [[.16, 2600, 570, .25, 310, 120]],
+    crash:   [[.68, 1120, 100, .58, 112, 39]],
+    launch:  [[.27, 430, 1790, .22, 190, 480]],
+    water:   [[.59, 1730, 280, .43, 169, 64]],
+    missile: [[.13, 1900, 540, .30, 134, 62], [.53, 2550, 320, .34, 92, 46, .028, .065]],
+    flare:   [[.080, 4700, 1300, .25, 290, 138], [.24, 5800, 1800, .16, 205, 104, .072]],
+    knockout:[[.21, 3300, 460, .40, 158, 57], [.68, 880, 92, .40, 79, 37, .055, .037]]
   };
   function transient(profile) {
-    const [duration,from,to,level,pitch,endPitch]=profile;
-    const now=context.currentTime;
+    const [duration,from,to,level,pitch,endPitch,delay=0,attack=.012]=profile;
+    const now=context.currentTime+delay;
     const source=context.createBufferSource(), filter=context.createBiquadFilter();
     const burst=context.createGain(),tone=context.createOscillator(),body=context.createGain();
     source.buffer=voice.noise;
@@ -192,7 +196,7 @@ function createFlightAudio() {
     filter.frequency.setValueAtTime(from,now);
     filter.frequency.exponentialRampToValueAtTime(to,now+duration);
     burst.gain.setValueAtTime(.0001,now);
-    burst.gain.exponentialRampToValueAtTime(level,now+.012);
+    burst.gain.exponentialRampToValueAtTime(level,now+attack);
     burst.gain.exponentialRampToValueAtTime(.0002,now+duration);
     body.gain.setValueAtTime(.0001,now);
     body.gain.exponentialRampToValueAtTime(level*.12,now+.009);
@@ -203,13 +207,13 @@ function createFlightAudio() {
     tone.connect(body).connect(voice.mix);
     source.onended=()=>{source.disconnect();filter.disconnect();burst.disconnect();};
     tone.onended=()=>{tone.disconnect();body.disconnect();};
-    source.start(now,.42);source.stop(now+duration);
+    source.start(now,.42+delay*7);source.stop(now+duration);
     tone.start(now);tone.stop(now+duration*.82);
   }
 
   function cue(kind) {
     if (!enabled || paused || !voice) return;
-    if (Object.prototype.hasOwnProperty.call(impacts,kind)) { transient(impacts[kind]); return; }
+    if (Object.prototype.hasOwnProperty.call(impacts,kind)) { impacts[kind].forEach(transient); return; }
     const notes = calls[kind];
     if (!Array.isArray(notes)) return;
     const now = context.currentTime;

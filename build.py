@@ -23,7 +23,8 @@ css = css.replace("@FONT_REGULAR@", font_url("SemiBold")).replace("@FONT_ITALIC@
 program = "\n".join((SRC / name).read_text() for name in (
     "instruments.js", "pfd.js", "cockpit.js", "visor.js", "aircraft.js", "deck-fleet.js", "carrier.js",
     "ocean.js", "woodland.js", "terrain-material.js", "coast.js", "exhaust.js", "wing-trails.js", "ground-light.js", "audio.js", "tower.js",
-    "radio-panel.js", "simulator.js", "effects.js", "range.js", "duel-flares.js", "duel.js", "radar.js", "observer.js", "flight.js",
+    "radio-panel.js", "wreck.js", "simulator.js", "effects.js", "range.js", "duel-flares.js", "duel-impact.js",
+    "duel-missile.js", "duel.js", "radar.js", "observer.js", "flight.js",
 ))
 radio_audio = (VENDOR / "tower-radio.mp3").read_bytes()
 radio_cues = json.loads((VENDOR / "tower-radio.json").read_text())

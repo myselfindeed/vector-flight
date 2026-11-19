@@ -83,13 +83,13 @@
       <div class="range-current"><span class="target-led"></span><b id="targetValue">F-35B · 敌机 02</b></div>
       <button id="target" hidden><span id="targetAction"></span><kbd>T</kbd></button>
     </div>
-    <div id="shields" class="shield-pair" hidden>
-      <span>我方 <meter id="ownShield" aria-label="我方护盾" min="0" max="3" value="3"></meter></span>
-      <span>敌机 <meter id="enemyShield" aria-label="敌机护盾" min="0" max="3" value="3"></meter></span>
+    <div id="aircraftCondition" class="aircraft-condition" role="group" aria-label="机体状况" hidden>
+      <span>我机 <b id="ownCondition">完好</b></span>
+      <span>敌机 <b id="enemyCondition">完好</b></span>
     </div>
     <button id="fire" title="起飞对战（J）"><canvas data-icon="takeoff"></canvas><span id="actionLabel">起飞对战</span><strong id="ammo">1v1</strong><kbd>J</kbd></button>
-    <button id="flare" title="来袭脉冲接近时释放干扰弹（U）" aria-keyshortcuts="U" hidden disabled><span id="flareLabel">干扰弹待命</span><kbd>U</kbd></button>
-    <div id="rangeHint" role="status" aria-live="polite">击破敌机的三格护盾即可获胜。</div>
+    <button id="flare" title="导弹来袭时释放干扰弹（U）" aria-keyshortcuts="U" hidden disabled><span id="flareLabel">干扰弹待命</span><kbd>U</kbd></button>
+    <div id="rangeHint" role="status" aria-live="polite">三次命中可击落敌机。</div>
   </section>
 
   <section id="comPanel" class="com-panel" aria-labelledby="comTitle" hidden>
@@ -148,7 +148,7 @@
       <div class="panel-head"><span class="kicker"><i></i><span id="dialogTag">FLIGHT MANUAL</span></span><button id="closeModal" class="tool square" aria-label="关闭"><canvas data-icon="close"></canvas></button></div>
       <h2 id="dialogTitle">操作指南</h2>
       <div id="helpContent">
-        <p>点「起飞对战」迎战另一架 F-35B。雷达上方是机头方向。转向敌机，进入射程并对准后按 J 或点「发射脉冲」。双方各有三格护盾，先击破对方护盾获胜。90 秒结束时，护盾较多的一方获胜，护盾相同则平局。</p>
+        <p>点「起飞对战」迎战另一架 F-35B。雷达上方是机头方向。对准射程内的敌机后，按 J 或点「发射导弹」。飞机第一次中弹会受损，第二次中弹会严重受损，第三次中弹将失控坠落。先击落对方获胜。90 秒内双方仍在空中时，受损较轻的一方获胜，机况相同则平局。</p>
         <dl class="controls-list">
           <div><dt><kbd>E</kbd> · <kbd>W</kbd> / <kbd>S</kbd> · <kbd>B</kbd></dt><dd>启动发动机 · 增减油门 · 甲板制动</dd></div>
           <div><dt><kbd>空格</kbd> / <kbd>V</kbd></dt><dd>甲板上滑跑起飞 / 垂直起飞</dd></div>
@@ -157,8 +157,8 @@
           <div><dt><kbd>←</kbd> / <kbd>→</kbd></dt><dd>手动平飞控制方向舵，甲板和辅助飞行控制转向</dd></div>
           <div><dt><kbd>空格</kbd> / <kbd>Shift</kbd> · <kbd>V</kbd></dt><dd>空中爬升 / 下降 · 平飞与悬停切换</dd></div>
           <div><dt><kbd>F</kbd> / <kbd>G</kbd> · <kbd>N</kbd></dt><dd>襟翼 / 起落架 · 停机时检查喷口</dd></div>
-          <div><dt><kbd>J</kbd></dt><dd>对战中发射脉冲，靶场中向选中的练习靶发射训练弹</dd></div>
-          <div><dt><kbd>U</kbd></dt><dd>脉冲来袭时释放干扰弹，敌机也能用干扰弹避开你的脉冲。</dd></div>
+          <div><dt><kbd>J</kbd></dt><dd>对战中发射导弹，靶场中向选中的练习靶发射训练弹</dd></div>
+          <div><dt><kbd>U</kbd></dt><dd>导弹来袭时释放干扰弹。敌机也能释放干扰弹。</dd></div>
           <div><dt><kbd>Y</kbd> · <kbd>1–7</kbd></dt><dd>塔台随飞行阶段自动通话，静音时显示字幕。打开电台可查看记录或主动呼叫。</dd></div>
           <div><dt><kbd>O</kbd> · <kbd>T</kbd></dt><dd>开关观察小窗 · 对战时查看敌机，靶场中换靶</dd></div>
           <div><dt><kbd>Q</kbd> / <kbd>K</kbd> · <kbd>X</kbd></dt><dd>横滚 / 筋斗 · 切换平飞加力</dd></div>

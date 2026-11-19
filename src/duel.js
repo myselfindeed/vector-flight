@@ -1,5 +1,5 @@
-// A one-on-one arcade match. Each pulse can remove one of three shield cells.
-function createFlightDuel(T,scene,coast,onEvent,jet){
+// One-on-one arcade match, with staged airframe damage and a visible descent after a knockout.
+function createFlightDuel(T,scene,coast,onEvent,jet,fx){
   const root=new T.Group(),rival=jet.flightCopy;
   root.name='空中对战';rival.name='敌机 02';root.add(rival);scene.add(root);
   const maxHP=3,maxTime=90,range=300,aimCos=Math.cos(17*Math.PI/180);
@@ -8,7 +8,7 @@ function createFlightDuel(T,scene,coast,onEvent,jet){
   const nose=new T.Vector3(),forward=new T.Vector3(),right=new T.Vector3(),offset=new T.Vector3();
   const playerVelocity=new T.Vector3(),rivalVelocity=new T.Vector3(),desired=new T.Vector3(),waypoint=new T.Vector3();
   const gaze=new T.Vector3(),poseMatrix=new T.Matrix4(),pose=new T.Quaternion(),bankQ=new T.Quaternion();
-  const forecast=new T.Vector3(),muzzle=new T.Vector3(),pulseEnd=new T.Vector3();
+  const forecast=new T.Vector3(),muzzle=new T.Vector3(),destination=new T.Vector3();
   const clamp=T.MathUtils.clamp, tau=2*Math.PI;
 
   // Small red wing panels and position lights identify the opposing copy of the airframe.
@@ -25,37 +25,50 @@ function createFlightDuel(T,scene,coast,onEvent,jet){
     const lamp=new T.Mesh(bulb,red);lamp.scale.set(1.6,.65,1.2);lamp.position.set(side*5.28,.15,1.85);rival.add(lamp);
   }
 
-  const hoop=new T.TorusGeometry(1,.075,6,32),boltCore=new T.SphereGeometry(1,8,6);
-  function pulse(color){
-    const mat=new T.MeshBasicMaterial({color,toneMapped:false,transparent:true,opacity:.94,depthWrite:false});
-    const group=new T.Group(),core=new T.Mesh(boltCore,mat),wave=new T.Mesh(hoop,mat);
-    core.scale.set(.70,.70,2.4);wave.scale.setScalar(1.95);group.add(core,wave);root.add(group);
-    return {group,start:new T.Vector3(),end:new T.Vector3(),age:0,duration:0,hit:false};
+  function missile(enemy){
+    return {enemy,visual:createDuelMissile(T,root,enemy,jet.createTrainingRound()),active:false,
+      start:new T.Vector3(),end:new T.Vector3(),position:new T.Vector3(),direction:new T.Vector3(),
+      launchAxis:new T.Vector3(),releaseVelocity:new T.Vector3(),releaseUp:new T.Vector3(),
+      age:0,duration:0,hit:false,diverted:false,rack:0};
   }
-  const outgoing=pulse(0x74f8f0),incoming=pulse(0xff5e46);
-  const flares=createDuelFlares(T,root),flareDelay=8,divertTime=.32;
-  const impact=new T.Mesh(new T.SphereGeometry(1,14,8),new T.MeshBasicMaterial({
-    color:0xffffff,wireframe:true,transparent:true,depthWrite:false,toneMapped:false
-  }));
-  root.add(impact);
+  const outgoing=missile(false),incoming=missile(true);
+  const flares=createDuelFlares(T,root),impact=createDuelImpact(T,root);
+  const wreck=createWreckMotion(T,coast),flareDelay=8,divertTime=.32;
+  const exhaustPoint=new T.Vector3(),previousPoint=new T.Vector3();
   let status,stage,elapsed,cool,playerHP,rivalHP,message,result,outcome;
-  let aligned,inRange,chargeAt,chargeEnds,evadeUntil,impactAge,impactRival;
-  let playerFlareAt,rivalFlareAt;
+  let aligned,inRange,chargeAt,chargeEnds,evadeUntil,playerFlareAt,rivalFlareAt;
+  let rivalDown=false,impactHold=0,smokeAt=0;
   function emit(kind,text){message=text;if(onEvent)onEvent(kind,text);}
-  function clearPulses(){outgoing.group.visible=incoming.group.visible=false;chargeEnds=0;}
+  function stopShots(){
+    for(const shot of [outgoing,incoming]){shot.active=false;shot.visual.end();}
+    chargeEnds=0;
+  }
+  function loadout(active){
+    for(const slot of jet.mounts){
+      slot.rangeRack.visible=!active;slot.combatStore.visible=active;slot.rivalStore.visible=true;
+    }
+  }
   function reset(){
-    root.visible=rival.visible=impact.visible=false;clearPulses();flares.reset();
-    playerFlareAt=rivalFlareAt=0;
-    status='idle';stage='chase';playerHP=rivalHP=maxHP;elapsed=cool=evadeUntil=impactAge=0;
+    root.visible=rival.visible=false;stopShots();flares.reset();impact.reset();
+    for(const shot of [outgoing,incoming]){shot.visual.reset();shot.rack=0;}
+    loadout(false);playerFlareAt=rivalFlareAt=smokeAt=impactHold=0;rivalDown=false;
+    status='idle';stage='chase';playerHP=rivalHP=maxHP;elapsed=cool=evadeUntil=0;
     aligned=inRange=false;chargeAt=6;message=result=outcome='';
   }
-  function stop(){const active=status==='active';reset();if(active)emit('end','已退出本局对战。');}
+  function stop(){
+    const inMatch=status==='active'||status==='crashing';reset();
+    if(inMatch)emit('end','已退出本局对战。');
+  }
   function airborne(s){return s&&s.position&&!s.onGround&&['free','departure','liftoff'].includes(s.phase);}
   function finish(reason){
-    if(status!=='active')return;
-    status='finished';stage='finished';aligned=inRange=false;clearPulses();flares.reset();rival.visible=false;root.visible=impact.visible;
-    outcome=reason?'retired':playerHP>rivalHP?'win':playerHP<rivalHP?'loss':'tie';
-    result=reason||(outcome==='win'?'你获胜':outcome==='loss'?'敌机 02 获胜':'平局');
+    const afterCrash=status==='crashing';
+    status='finished';stage='finished';aligned=inRange=false;stopShots();flares.reset();
+    rival.visible=false;loadout(false);
+    root.visible=impact.visible||outgoing.visual.visible||incoming.visual.visible;
+    if(!afterCrash){
+      outcome=reason?'retired':playerHP>rivalHP?'win':playerHP<rivalHP?'loss':'tie';
+      result=reason||(outcome==='win'?'你获胜':outcome==='loss'?'敌机 02 获胜':'平局');
+    }
     emit('end',result);
   }
   function axes(s){
@@ -95,27 +108,39 @@ function createFlightDuel(T,scene,coast,onEvent,jet){
     if(snap)rival.quaternion.copy(pose);else rival.quaternion.slerp(pose,1-Math.exp(-4*dt));
   }
   function start(s){
-    if(status==='active'||!airborne(s))return false;
-    reset();status='active';root.visible=rival.visible=true;axes(s);fly(s,0,true);aim(s);
-    emit('start','敌机 02 已入场，靠近并对准敌机，按 J 发射脉冲。');return true;
+    if(status==='active'||status==='crashing'||!airborne(s))return false;
+    reset();status='active';root.visible=rival.visible=true;loadout(true);axes(s);fly(s,0,true);aim(s);
+    emit('start','敌机 02 已入场，对准后按 J 发射导弹。');return true;
   }
-  function launch(shot,startPoint,endPoint,duration,hit){
-    shot.age=0;shot.duration=duration;shot.hit=hit;shot.diverted=false;shot.start.copy(startPoint);shot.end.copy(endPoint);
-    shot.group.position.copy(startPoint);shot.group.scale.setScalar(1);shot.group.visible=true;
-    offset.subVectors(endPoint,startPoint).normalize();
-    if(offset.lengthSq()>.5)shot.group.quaternion.setFromUnitVectors(zAxis,offset);
+  function launch(shot,s,endPoint,duration,hit){
+    const rotation=shot.enemy?rival.quaternion:s.attitudeQuaternion;
+    const position=shot.enemy?rival.position:s.position;
+    const slot=jet.mounts[shot.rack%jet.mounts.length];
+    shot.rack++;
+    // Only the currently departing store leaves its rail. The range has its own loadout.
+    for(const mount of jet.mounts)(shot.enemy?mount.rivalStore:mount.combatStore).visible=mount!==slot;
+    muzzle.copy(slot.socket.position);
+    shot.launchAxis.set(0,0,-1);shot.releaseUp.set(0,1,0);
+    if(rotation){
+      muzzle.applyQuaternion(rotation);shot.launchAxis.applyQuaternion(rotation);shot.releaseUp.applyQuaternion(rotation);
+    }
+    muzzle.add(position);
+    shot.active=true;shot.hit=hit;shot.diverted=false;shot.age=0;shot.duration=duration;
+    shot.start.copy(muzzle);shot.position.copy(muzzle);shot.direction.copy(shot.launchAxis);shot.end.copy(endPoint);
+    shot.releaseVelocity.copy(shot.enemy?rivalVelocity:playerVelocity);
+    shot.visual.launch(muzzle,shot.direction);
   }
   function divert(shot,enemy,s){
     const position=enemy?rival.position:s.position,rotation=enemy?rival.quaternion:s.attitudeQuaternion;
-    flares.burst(enemy,position,rotation,pulseEnd,divertTime);
-    launch(shot,shot.group.position,pulseEnd,divertTime,false);
-    shot.diverted=true;
+    flares.burst(enemy,position,rotation,shot.end,divertTime);
+    shot.start.copy(shot.position);shot.launchAxis.copy(shot.direction);
+    shot.age=0;shot.duration=divertTime;shot.hit=false;shot.diverted=true;
     if(enemy)rivalFlareAt=elapsed+flareDelay;
     else {playerFlareAt=elapsed+flareDelay;stage='chase';}
-    emit('evade',enemy?'敌机释放干扰弹，引开了你的脉冲。':'干扰弹已引开来袭脉冲。');
+    emit('flare',enemy?'敌机释放干扰弹，导弹偏离了目标。':'干扰弹已引开来袭导弹。');
   }
   function canFlare(){
-    return status==='active'&&incoming.group.visible&&!incoming.diverted&&elapsed>=playerFlareAt;
+    return status==='active'&&incoming.active&&!incoming.diverted&&elapsed>=playerFlareAt;
   }
   function deployFlare(s){
     if(!canFlare()||!airborne(s))return false;
@@ -125,77 +150,138 @@ function createFlightDuel(T,scene,coast,onEvent,jet){
     if(status!=='active'||!airborne(s)||cool>0)return false;
     axes(s);aim(s);cool=fireDelay;
     const hit=aligned&&inRange;
-    muzzle.copy(s.position).addScaledVector(nose,8);
-    if(hit)pulseEnd.copy(rival.position);
-    else pulseEnd.copy(muzzle).addScaledVector(nose,range);
-    launch(outgoing,muzzle,pulseEnd,.36,hit);
-    emit('launch',hit?'脉冲已发射。':inRange?'脉冲偏离，转向敌机再试。':'敌机超出脉冲射程。');
+    if(hit)destination.copy(rival.position);
+    else destination.copy(s.position).addScaledVector(nose,range);
+    launch(outgoing,s,destination,.62,hit);
+    emit('launch',hit?'导弹已离架。':inRange?'导弹已离架，偏离目标。':'导弹已离架，敌机超出射程。');
     return true;
   }
-  function damage(enemy,s){
+  function damage(enemy,s,shot){
     if(enemy){rivalHP--;evadeUntil=elapsed+1.9;}else playerHP--;
-    impactRival=enemy;impactAge=0;impact.visible=true;impact.scale.setScalar(4);
-    impact.material.color.setHex(enemy?0x6cfff2:0xff6b50);impact.material.opacity=.86;
-    impact.position.copy(enemy?rival.position:s.position);
-    emit('score',enemy?'命中敌机，敌方护盾剩余 '+rivalHP+' 格。':'我机中弹，护盾剩余 '+playerHP+' 格。');
-    if(playerHP===0||rivalHP===0)finish('');
+    const hp=enemy?rivalHP:playerHP,position=enemy?rival.position:s.position;
+    const rotation=enemy?rival.quaternion:s.attitudeQuaternion,velocity=enemy?rivalVelocity:playerVelocity;
+    impact.burst(enemy,position,rotation,shot.start,velocity);
+    smokeAt=0;
+    if(hp>0){
+      emit('score',(enemy?'命中敌机，':'我机中弹，')+(hp===1?'机体重损，开始冒浓烟。':'机身受损。'));
+      return;
+    }
+    status='crashing';stage='falling';rivalDown=enemy;aligned=inRange=false;
+    stopShots();outcome=enemy?'win':'loss';result=enemy?'敌机已被击落，你获胜':'我机被击落，敌机 02 获胜';
+    if(enemy)wreck.start(rotation,velocity);
+    else{
+      // The surviving aircraft continues its flyby while the player falls.
+      rivalVelocity.set(0,0,-1).applyQuaternion(rival.quaternion).multiplyScalar(Math.max(36,rivalVelocity.length()));
+      rivalVelocity.y=Math.max(3,rivalVelocity.y);
+    }
+    fx.burst(position,'knockout',s.windX,s.windZ,velocity);
+    emit(enemy?'rivalDown':'playerDown',enemy?'敌机起火失控，正在坠落。':'我机起火失控，正在坠落。');
   }
-  function stepPulse(shot,s,dt){
-    if(!shot.group.visible)return;
+  function stepMissile(shot,s,dt){
+    if(!shot.active)return;
     shot.age+=dt;const t=Math.min(1,shot.age/shot.duration);
     if(shot===outgoing&&shot.hit)shot.end.copy(rival.position);
-    shot.group.position.lerpVectors(shot.start,shot.end,t);
-    shot.group.scale.setScalar(1+.6*t);
-    if(shot===outgoing&&shot.hit&&t>=.65&&elapsed>=rivalFlareAt){
-      divert(shot,true,s);return;
+    previousPoint.copy(shot.position);
+    if(shot.diverted){
+      // Ease out along the old trail before the smoke bends towards the flare.
+      offset.copy(shot.start).addScaledVector(shot.launchAxis,Math.min(15,.35*shot.start.distanceTo(shot.end)));
+      shot.position.copy(shot.start).lerp(offset,t);
+      offset.lerp(shot.end,t);shot.position.lerp(offset,t);
+    }else{
+      // A short release beat keeps the departing store in view beneath the wing before ignition.
+      const release=.085;
+      const drop=Math.min(shot.age,release);
+      shot.position.copy(shot.start).addScaledVector(shot.releaseVelocity,drop)
+        .addScaledVector(shot.releaseUp,-.75*drop/release).addScaledVector(shot.launchAxis,.5*drop/release);
+      if(shot.age>release){
+        const travel=Math.min(1,(shot.age-release)/(shot.duration-release));
+        shot.position.lerp(shot.end,travel*(.38+.62*travel));
+      }
     }
+    if(shot.diverted||shot.age>.085){
+      offset.subVectors(shot.position,previousPoint);
+      if(offset.lengthSq()>1e-6)shot.direction.copy(offset).normalize();
+    }
+    shot.visual.update(shot.position,shot.direction,dt);
+    if(shot===outgoing&&shot.hit&&t>=.65&&elapsed>=rivalFlareAt){divert(shot,true,s);return;}
     if(t<1)return;
-    shot.group.visible=false;
+    shot.active=false;shot.visual.end();
     if(shot.diverted)return;
-    if(shot===outgoing){if(shot.hit)damage(true,s);}
+    if(shot===outgoing){if(shot.hit)damage(true,s,shot);}
     else{
       stage='chase';
-      if(s.position.distanceToSquared(shot.end)<=11*11)damage(false,s);
-      else emit('evade','成功避开来袭脉冲。');
+      if(s.position.distanceToSquared(shot.end)<=11*11)damage(false,s,shot);
+      else emit('evade','已避开来袭导弹。');
     }
   }
-  function stepImpact(s,dt){
-    if(!impact.visible)return;
-    impactAge+=dt;
-    if(impactAge>.55){impact.visible=false;if(status==='finished')root.visible=false;return;}
-    if(status==='active')impact.position.copy(impactRival?rival.position:s.position);
-    impact.scale.setScalar(4+impactAge*20);impact.material.opacity=.86*(1-impactAge/.55);
+  function smoke(position,rotation,burning,s){
+    exhaustPoint.set(1.25,.30,3.1);
+    if(rotation)exhaustPoint.applyQuaternion(rotation);
+    fx.trail(exhaustPoint.add(position),s.windX,s.windZ,burning);
+  }
+  function stepVisuals(s,dt){
+    outgoing.visual.step(dt);incoming.visual.step(dt);flares.step(dt);
+    impact.step(dt,s.position,rival.position);
+    smokeAt-=dt;
+    if(smokeAt<=0){
+      smokeAt=.065;
+      if(rival.visible&&rivalHP<maxHP&&stage!=='impact')smoke(rival.position,rival.quaternion,rivalHP<=1,s);
+      if(playerHP>0&&playerHP<maxHP&&airborne(s)&&status==='active')smoke(s.position,s.attitudeQuaternion,playerHP<=1,s);
+    }
+  }
+  function stepWreck(s,dt){
+    if(stage==='impact'){
+      impactHold-=dt;if(impactHold<=0)finish('');
+      return;
+    }
+    let contact='';
+    if(rivalDown){
+      contact=wreck.step(rival.position,rival.quaternion,dt);
+      if(contact){
+        rival.visible=false;
+        fx.burst(rival.position,contact,s.windX,s.windZ);
+        emit(contact==='water'?'splash':'groundImpact',contact==='water'?'敌机已坠海。':'敌机撞地爆炸。');
+      }
+    }else{
+      rival.position.addScaledVector(rivalVelocity,dt);
+      rival.position.y=Math.max(rival.position.y,coast.groundHeight(rival.position.x,rival.position.z)+8);
+      if(s.phase==='crashed')contact='crash';
+    }
+    if(contact){stage='impact';impactHold=.95;}
   }
   function advance(s,dt){
     elapsed=Math.min(maxTime,elapsed+dt);cool=Math.max(0,cool-dt);
-    axes(s);fly(s,dt,false);aim(s);stepImpact(s,dt);flares.step(dt);
+    axes(s);fly(s,dt,false);aim(s);
     if(elapsed>=chargeAt){
       chargeAt+=period;
       if(inRange){
         stage='attack';chargeEnds=elapsed+windup;
-        // The warning freezes one spot in the game's moving airspace. The player
-        // can leave it before the red pulse arrives, including while hovering.
         forecast.copy(s.position).addScaledVector(playerVelocity,windup+inboundFlight);
-        emit('cue','敌机正在蓄能。准备按 U 释放干扰弹，也可转弯躲避。');
+        emit('cue','敌机准备发射导弹。');
       }
     }
     if(chargeEnds&&elapsed>=chargeEnds){
-      chargeEnds=0;launch(incoming,rival.position,forecast,inboundFlight,false);
-      emit('incoming','敌方脉冲来袭。');
+      chargeEnds=0;launch(incoming,s,forecast,inboundFlight,false);
+      emit('incoming','来袭导弹！可按 U 释放干扰弹。');
     }
-    stepPulse(outgoing,s,dt);
-    if(status==='active')stepPulse(incoming,s,dt);
+    stepMissile(outgoing,s,dt);
+    if(status==='active')stepMissile(incoming,s,dt);
     if(status==='active'&&elapsed>=maxTime)finish('');
   }
   function step(s,dt){
     if(!Number.isFinite(dt)||dt<=0||status==='idle')return;
-    if(status==='finished'){stepImpact(s,dt);return;}
-    if(!airborne(s)){
-      impact.visible=false;finish(s&&s.phase==='return'?'已返航，对战结束':'飞行中断，对战结束');return;
+    if(status==='active'&&!airborne(s)){
+      impact.reset();finish(s&&s.phase==='return'?'已返航，对战结束':'飞行中断，对战结束');return;
     }
-    // Preserve the warning and pulse windows when frames are skipped.
-    for(let remaining=dt;remaining>1e-7&&status==='active';){
-      const slice=Math.min(remaining,.05);advance(s,slice);remaining-=slice;
+    for(let remaining=dt;s&&remaining>1e-7;){
+      const slice=Math.min(remaining,.05);remaining-=slice;
+      stepVisuals(s,slice);
+      if(status==='active')advance(s,slice);
+      else if(status==='crashing')stepWreck(s,slice);
+      else{
+        root.visible=impact.visible||outgoing.visual.visible||incoming.visual.visible;
+        if(!root.visible)break;
+      }
     }
   }
   reset();

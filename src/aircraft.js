@@ -726,6 +726,7 @@ function createAircraft(THREE) {
   update({dt:0,gear:0});
   root.updateMatrixWorld(true);
   const flightCopy=new THREE.Group();
+  for(const slot of mounts)slot.store.visible=false;
   root.traverseVisible(part=>{
     if(!part.isMesh&&!part.isLineSegments)return;
     const mesh=part.clone(false);
@@ -734,6 +735,15 @@ function createAircraft(THREE) {
     mesh.castShadow=false;
     flightCopy.add(mesh);
   });
+  for(const slot of mounts){
+    slot.store.visible=true;
+    // The range owns its ammunition, even while the duel loadout is on display.
+    slot.rangeRack=new THREE.Group();slot.rangeRack.add(slot.store);
+    slot.combatStore=createTrainingRound();slot.combatStore.visible=false;
+    slot.socket.add(slot.rangeRack,slot.combatStore);
+    slot.rivalStore=createTrainingRound();
+    slot.rivalStore.position.copy(slot.socket.position);flightCopy.add(slot.rivalStore);
+  }
   update({dt:0});
   return {root,flightCopy,update,nozzlePivot:joints[0],nozzleExit,mounts,createTrainingRound};
 }

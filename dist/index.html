@@ -225,32 +225,32 @@ kbd{display:inline-flex;align-items:center;justify-content:center;font:10px/1.18
 .range-card[data-feedback=win] .range-current b{color:#afe5cb}
 #targetMark.enemy i{width:18px;height:18px;border:1.5px solid #ffac91;border-radius:1px;transform:rotate(45deg)}
 #targetMark.enemy span{color:#ffd9c9}
+#targetMark.label-left span{position:absolute;right:calc(100% + 6px)}
+.wreck-view .aircraft-title{display:none}
 #targetMark.enemy.aligned i{border-color:#aeffe5;box-shadow:inset 0 0 4px #80ffd855}
 #targetMark.enemy.aligned span{color:#c4ffed}
-.shield-pair{display:flex;justify-content:space-between;gap:10px}
-.shield-pair>span{display:flex;align-items:center;gap:5px;font-size:11px;color:#d3dbd3;white-space:nowrap}
-.shield-pair meter{appearance:none;display:block;border:0;width:46px;height:6px;background:#40504d;--shield:#9de1cd;mask-image:repeating-linear-gradient(90deg,black 0,black calc(33.333% - 2px),transparent calc(33.333% - 2px),transparent 33.333%)}
-#enemyShield{--shield:#fa9c82}
-.shield-pair meter::-webkit-meter-bar{background:#40504d;border:0;border-radius:0;height:100%}
-.shield-pair meter::-webkit-meter-optimum-value{background:var(--shield)}
-.shield-pair meter::-moz-meter-bar{background:var(--shield)}
+.aircraft-condition{display:flex;justify-content:space-between;gap:10px}
+.aircraft-condition>span{display:flex;align-items:center;gap:5px;font-size:11px;color:#d3dbd3;white-space:nowrap}
+.aircraft-condition b{font-size:11px;font-weight:650;color:#b0d8c5}
+.aircraft-condition b[data-hp="2"]{color:#ecc886}
+.aircraft-condition b[data-hp="1"],.aircraft-condition b[data-hp="0"]{color:#ffab92}
 @media(min-width:761px) and (min-height:571px){
   .view-cockpit .range-card[data-mission=duel]{grid-template-columns:max-content max-content auto minmax(138px,170px) 1fr;gap:12px}
   .view-cockpit .range-card[data-mission=duel]:has(#flare:not([hidden])){grid-template-columns:auto auto auto auto auto minmax(0,1fr)}
-  .view-cockpit .shield-pair{flex-wrap:wrap;max-width:95px;gap:2px}
-  .view-cockpit .range-card[data-mission=duel]:has(.shield-pair[hidden]){grid-template-columns:max-content max-content minmax(138px,170px) 1fr}
+  .view-cockpit .aircraft-condition{flex-wrap:wrap;max-width:95px;gap:2px}
+  .view-cockpit .range-card[data-mission=duel]:has(.aircraft-condition[hidden]){grid-template-columns:max-content max-content minmax(138px,170px) 1fr}
 }
 @media(max-width:760px),(max-height:570px){
   .range-card[data-mission=duel] .range-heading{grid-area:1/1}
   .range-card[data-mission=duel] .range-selection{grid-area:1/2}
   .range-card[data-mission=duel] #fire{grid-area:1/3}
-  .range-card[data-mission=duel] .shield-pair{grid-area:2/1/3/3;justify-content:start}
+  .range-card[data-mission=duel] .aircraft-condition{grid-area:2/1/3/3;justify-content:start}
   .range-card[data-mission=duel] #flare{grid-area:2/3;min-width:84px}
   .range-card[data-mission=duel] #rangeHint{grid-area:3/1/4/-1}
-  .range-card[data-mission=duel]:has(.shield-pair[hidden]) #rangeHint{grid-row:2}
+  .range-card[data-mission=duel]:has(.aircraft-condition[hidden]) #rangeHint{grid-row:2}
 }
 @media(max-height:570px) and (min-width:521px){
-  .range-card[data-mission=duel] .shield-pair{grid-area:1/4;justify-content:center}
+  .range-card[data-mission=duel] .aircraft-condition{grid-area:1/4;justify-content:center}
   .range-card[data-mission=duel] #rangeHint{grid-area:2/1/3/-1}
   .range-card[data-mission=duel] #flare{grid-area:2/4;min-height:26px}
   .range-card[data-mission=duel]:has(#flare:not([hidden])) #rangeHint{grid-column:1/4}
@@ -381,13 +381,13 @@ kbd{display:inline-flex;align-items:center;justify-content:center;font:10px/1.18
       <div class="range-current"><span class="target-led"></span><b id="targetValue">F-35B · 敌机 02</b></div>
       <button id="target" hidden><span id="targetAction"></span><kbd>T</kbd></button>
     </div>
-    <div id="shields" class="shield-pair" hidden>
-      <span>我方 <meter id="ownShield" aria-label="我方护盾" min="0" max="3" value="3"></meter></span>
-      <span>敌机 <meter id="enemyShield" aria-label="敌机护盾" min="0" max="3" value="3"></meter></span>
+    <div id="aircraftCondition" class="aircraft-condition" role="group" aria-label="机体状况" hidden>
+      <span>我机 <b id="ownCondition">完好</b></span>
+      <span>敌机 <b id="enemyCondition">完好</b></span>
     </div>
     <button id="fire" title="起飞对战（J）"><canvas data-icon="takeoff"></canvas><span id="actionLabel">起飞对战</span><strong id="ammo">1v1</strong><kbd>J</kbd></button>
-    <button id="flare" title="来袭脉冲接近时释放干扰弹（U）" aria-keyshortcuts="U" hidden disabled><span id="flareLabel">干扰弹待命</span><kbd>U</kbd></button>
-    <div id="rangeHint" role="status" aria-live="polite">击破敌机的三格护盾即可获胜。</div>
+    <button id="flare" title="导弹来袭时释放干扰弹（U）" aria-keyshortcuts="U" hidden disabled><span id="flareLabel">干扰弹待命</span><kbd>U</kbd></button>
+    <div id="rangeHint" role="status" aria-live="polite">三次命中可击落敌机。</div>
   </section>
 
   <section id="comPanel" class="com-panel" aria-labelledby="comTitle" hidden>
@@ -446,7 +446,7 @@ kbd{display:inline-flex;align-items:center;justify-content:center;font:10px/1.18
       <div class="panel-head"><span class="kicker"><i></i><span id="dialogTag">FLIGHT MANUAL</span></span><button id="closeModal" class="tool square" aria-label="关闭"><canvas data-icon="close"></canvas></button></div>
       <h2 id="dialogTitle">操作指南</h2>
       <div id="helpContent">
-        <p>点「起飞对战」迎战另一架 F-35B。雷达上方是机头方向。转向敌机，进入射程并对准后按 J 或点「发射脉冲」。双方各有三格护盾，先击破对方护盾获胜。90 秒结束时，护盾较多的一方获胜，护盾相同则平局。</p>
+        <p>点「起飞对战」迎战另一架 F-35B。雷达上方是机头方向。对准射程内的敌机后，按 J 或点「发射导弹」。飞机第一次中弹会受损，第二次中弹会严重受损，第三次中弹将失控坠落。先击落对方获胜。90 秒内双方仍在空中时，受损较轻的一方获胜，机况相同则平局。</p>
         <dl class="controls-list">
           <div><dt><kbd>E</kbd> · <kbd>W</kbd> / <kbd>S</kbd> · <kbd>B</kbd></dt><dd>启动发动机 · 增减油门 · 甲板制动</dd></div>
           <div><dt><kbd>空格</kbd> / <kbd>V</kbd></dt><dd>甲板上滑跑起飞 / 垂直起飞</dd></div>
@@ -455,8 +455,8 @@ kbd{display:inline-flex;align-items:center;justify-content:center;font:10px/1.18
           <div><dt><kbd>←</kbd> / <kbd>→</kbd></dt><dd>手动平飞控制方向舵，甲板和辅助飞行控制转向</dd></div>
           <div><dt><kbd>空格</kbd> / <kbd>Shift</kbd> · <kbd>V</kbd></dt><dd>空中爬升 / 下降 · 平飞与悬停切换</dd></div>
           <div><dt><kbd>F</kbd> / <kbd>G</kbd> · <kbd>N</kbd></dt><dd>襟翼 / 起落架 · 停机时检查喷口</dd></div>
-          <div><dt><kbd>J</kbd></dt><dd>对战中发射脉冲，靶场中向选中的练习靶发射训练弹</dd></div>
-          <div><dt><kbd>U</kbd></dt><dd>脉冲来袭时释放干扰弹，敌机也能用干扰弹避开你的脉冲。</dd></div>
+          <div><dt><kbd>J</kbd></dt><dd>对战中发射导弹，靶场中向选中的练习靶发射训练弹</dd></div>
+          <div><dt><kbd>U</kbd></dt><dd>导弹来袭时释放干扰弹。敌机也能释放干扰弹。</dd></div>
           <div><dt><kbd>Y</kbd> · <kbd>1–7</kbd></dt><dd>塔台随飞行阶段自动通话，静音时显示字幕。打开电台可查看记录或主动呼叫。</dd></div>
           <div><dt><kbd>O</kbd> · <kbd>T</kbd></dt><dd>开关观察小窗 · 对战时查看敌机，靶场中换靶</dd></div>
           <div><dt><kbd>Q</kbd> / <kbd>K</kbd> · <kbd>X</kbd></dt><dd>横滚 / 筋斗 · 切换平飞加力</dd></div>
@@ -2046,6 +2046,7 @@ function createAircraft(THREE) {
   update({dt:0,gear:0});
   root.updateMatrixWorld(true);
   const flightCopy=new THREE.Group();
+  for(const slot of mounts)slot.store.visible=false;
   root.traverseVisible(part=>{
     if(!part.isMesh&&!part.isLineSegments)return;
     const mesh=part.clone(false);
@@ -2054,6 +2055,15 @@ function createAircraft(THREE) {
     mesh.castShadow=false;
     flightCopy.add(mesh);
   });
+  for(const slot of mounts){
+    slot.store.visible=true;
+    // The range owns its ammunition, even while the duel loadout is on display.
+    slot.rangeRack=new THREE.Group();slot.rangeRack.add(slot.store);
+    slot.combatStore=createTrainingRound();slot.combatStore.visible=false;
+    slot.socket.add(slot.rangeRack,slot.combatStore);
+    slot.rivalStore=createTrainingRound();
+    slot.rivalStore.position.copy(slot.socket.position);flightCopy.add(slot.rivalStore);
+  }
   update({dt:0});
   return {root,flightCopy,update,nozzlePivot:joints[0],nozzleExit,mounts,createTrainingRound};
 }
@@ -4209,16 +4219,20 @@ function createFlightAudio() {
     gate: [622, 831]
   };
 
-  // Duration, noise filter start/end, noise level, and pitch of the short transient.
+  // Each layer specifies duration, noise filter sweep, level and body pitch sweep.
+  // A second layer can start later and swell for longer than the initial strike.
   const impacts = {
-    hit:    [.16, 2600, 570, .25, 310, 120],
-    crash:  [.68, 1120, 100, .58, 112, 39],
-    launch: [.27, 430, 1790, .22, 190, 480],
-    water:  [.59, 1730, 280, .43, 169, 64]
+    hit:     [[.16, 2600, 570, .25, 310, 120]],
+    crash:   [[.68, 1120, 100, .58, 112, 39]],
+    launch:  [[.27, 430, 1790, .22, 190, 480]],
+    water:   [[.59, 1730, 280, .43, 169, 64]],
+    missile: [[.13, 1900, 540, .30, 134, 62], [.53, 2550, 320, .34, 92, 46, .028, .065]],
+    flare:   [[.080, 4700, 1300, .25, 290, 138], [.24, 5800, 1800, .16, 205, 104, .072]],
+    knockout:[[.21, 3300, 460, .40, 158, 57], [.68, 880, 92, .40, 79, 37, .055, .037]]
   };
   function transient(profile) {
-    const [duration,from,to,level,pitch,endPitch]=profile;
-    const now=context.currentTime;
+    const [duration,from,to,level,pitch,endPitch,delay=0,attack=.012]=profile;
+    const now=context.currentTime+delay;
     const source=context.createBufferSource(), filter=context.createBiquadFilter();
     const burst=context.createGain(),tone=context.createOscillator(),body=context.createGain();
     source.buffer=voice.noise;
@@ -4226,7 +4240,7 @@ function createFlightAudio() {
     filter.frequency.setValueAtTime(from,now);
     filter.frequency.exponentialRampToValueAtTime(to,now+duration);
     burst.gain.setValueAtTime(.0001,now);
-    burst.gain.exponentialRampToValueAtTime(level,now+.012);
+    burst.gain.exponentialRampToValueAtTime(level,now+attack);
     burst.gain.exponentialRampToValueAtTime(.0002,now+duration);
     body.gain.setValueAtTime(.0001,now);
     body.gain.exponentialRampToValueAtTime(level*.12,now+.009);
@@ -4237,13 +4251,13 @@ function createFlightAudio() {
     tone.connect(body).connect(voice.mix);
     source.onended=()=>{source.disconnect();filter.disconnect();burst.disconnect();};
     tone.onended=()=>{tone.disconnect();body.disconnect();};
-    source.start(now,.42);source.stop(now+duration);
+    source.start(now,.42+delay*7);source.stop(now+duration);
     tone.start(now);tone.stop(now+duration*.82);
   }
 
   function cue(kind) {
     if (!enabled || paused || !voice) return;
-    if (Object.prototype.hasOwnProperty.call(impacts,kind)) { transient(impacts[kind]); return; }
+    if (Object.prototype.hasOwnProperty.call(impacts,kind)) { impacts[kind].forEach(transient); return; }
     const notes = calls[kind];
     if (!Array.isArray(notes)) return;
     const now = context.currentTime;
@@ -4724,6 +4738,33 @@ function createTowerConsole(state,home,onRecovery,toggleSound,focusFlight){
   return {reset,step,key,setSound,event:kind=>radio.event(kind,state),suspend:value=>radio.suspend(value)};
 }
 
+// Both aircraft retain their velocity and bank when a hit starts a crash.
+function createWreckMotion(T,coast){
+  const velocity=new T.Vector3(),angles=new T.Euler(0,0,0,'YXZ');
+  let spin=0;
+  function start(quaternion,initialVelocity){
+    velocity.copy(initialVelocity);
+    angles.setFromQuaternion(quaternion,'YXZ');
+    spin=angles.z<0?-1:1;
+  }
+  function step(position,quaternion,dt){
+    velocity.x*=Math.exp(-.26*dt);velocity.z*=Math.exp(-.26*dt);
+    velocity.y=Math.max(-110,velocity.y-18*dt);
+    position.addScaledVector(velocity,dt);
+    angles.x+=(-1.23-angles.x)*(1-Math.exp(-.72*dt));
+    angles.z+=spin*1.8*dt;
+    quaternion.setFromEuler(angles);
+    const floor=coast.groundHeight(position.x,position.z);
+    if(position.y<=floor+.65){
+      position.y=floor+.08;
+      return floor<=coast.seaLevel+.15&&!coast.isDeck(position.x,position.z)?'water':'crash';
+    }
+    if(coast.obstacleAt(position.x,position.y,position.z,1.5))return 'crash';
+    return '';
+  }
+  return {start,step,velocity};
+}
+
 // Arcade flight dynamics in metres, seconds and radians. Wind is a world-space velocity.
 function createFlightSimulator(T, coast, event) {
   const home={x:-5,z:72}, wheel=1.6, vertical=Math.PI/2;
@@ -4740,6 +4781,7 @@ function createFlightSimulator(T, coast, event) {
   const rates=new T.Vector3(), rotationStep=new T.Vector3(), nose=new T.Vector3(), rightWing=new T.Vector3();
   const s={position:p,attitudeQuaternion:attitude,renderer:null,time:0,phase:"parked",mode:"cruise"};
   const controls={turn:0,forward:0,lift:0,pitch:0,yaw:0,brake:false};
+  const wreck=createWreckMotion(T,coast);
   const takeover={turn:0,pitch:0,yaw:0},attitudeInputs=["turn","pitch","yaw"],rotationAxes=["x","y","z"];
   const lastVelocity=new T.Vector3(), acceleration=new T.Vector3(), liftAxis=new T.Vector3();
   const fullTurn=2*Math.PI, maneuverNames={roll:"横滚",loop:"筋斗"};
@@ -4752,7 +4794,7 @@ function createFlightSimulator(T, coast, event) {
       engine:0,thrust:0,agl:0,msl:-coast.seaLevel,airspeed:0,speed:0,vx:0,vy:0,vz:0,onGround:true,
       windX:4,windZ:-2,windSpeed:4.47,humidity:.80,fuel:100,flapAuto:true,gearAuto:true,crashReason:"",landings:0,
       loadFactor:1,maneuver:"",maneuverQueued:"",maneuverProgress:0,boost:0,boostCommand:false,
-      assistEnabled:false,manualActive:false,pitchInput:0,yawInput:0,
+      assistEnabled:false,manualActive:false,pitchInput:0,yawInput:0,shotDown:false,
       displayPitch:0,displayRoll:0,displayHeading:0});
     attitude.identity();rates.set(0,0,0);
     Object.assign(controls,{turn:0,forward:0,lift:0,pitch:0,yaw:0,brake:false});
@@ -4798,6 +4840,12 @@ function createFlightSimulator(T, coast, event) {
     s.phase="crashed";s.crashReason=reason;s.onGround=false;s.engine=s.thrust=s.airspeed=s.speed=0;
     s.agl=Math.max(0,p.y-coast.groundHeight(p.x,p.z)-wheel);s.msl=p.y-wheel-coast.seaLevel;
     s.vx=s.vy=s.vz=0;forward=0;event(kind,reason);
+  }
+  function shootDown(){
+    if(s.onGround||!['liftoff','departure','free'].includes(s.phase))return;
+    clearManeuver();s.boostCommand=false;s.boost=0;s.manualActive=false;
+    s.shotDown=true;s.phase='falling';s.engine=s.thrust=0;
+    wreck.start(attitude,lastVelocity.set(s.vx,s.vy,s.vz));
   }
   function changeMode(){
     if(s.phase==="parked"||s.phase==="taxi"){launch("vertical");return;}
@@ -5113,6 +5161,16 @@ function createFlightSimulator(T, coast, event) {
     s.pitchInput=u.pitch;s.yawInput=u.yaw;
     s.time+=dt;wind();old.copy(p);lastVelocity.set(s.vx,s.vy,s.vz);
     if(s.phase==="crashed")return;
+    if(s.shotDown){
+      const contact=wreck.step(p,attitude,dt);
+      readPose(false);
+      s.vx=wreck.velocity.x;s.vy=wreck.velocity.y;s.vz=wreck.velocity.z;
+      updateFlightReadings(dt);
+      s.agl=Math.max(0,p.y-coast.groundHeight(p.x,p.z)-wheel);s.msl=p.y-wheel-coast.seaLevel;
+      s.speed=Math.hypot(s.vx,s.vz);s.airspeed=Math.hypot(s.vx-s.windX,s.vy,s.vz-s.windZ);
+      if(contact)crash(contact==='water'?'我机被击落，已坠海':'我机被击落，机体坠毁',contact);
+      return;
+    }
     if(s.phase==="parked"){
       s.onGround=true;s.nozzle=move(s.nozzle,bench?vertical:0,dt*.8);s.thrust=s.engine=s.speed=s.airspeed=0;
       s.turn=0;s.flap=move(s.flap,flapChoice<0?0:flapChoice*.5,dt*.60);return;
@@ -5134,13 +5192,149 @@ function createFlightSimulator(T, coast, event) {
     s.flapAuto=flapChoice<0;s.gearAuto=gearChoice<0;
   }
   reset();
-  return {state:s,home,reset,step,startEngine,launch,changeMode,returnHome,brake,flap,gear,testNozzle,crash,maneuver,toggleBoost,toggleAssist};
+  return {state:s,home,reset,step,startEngine,launch,changeMode,returnHome,brake,flap,gear,testNozzle,crash,shootDown,maneuver,toggleBoost,toggleAssist};
+}
+
+// One instanced draw per burst. Billows cool from the inside out while thin
+// streaks carry the initial outward motion past the edge of the cloud.
+function createFlightBursts(T,group) {
+  const quad=new T.PlaneGeometry(2,2),geometry=new T.InstancedBufferGeometry();
+  geometry.setIndex(quad.index);geometry.setAttribute('position',quad.attributes.position);
+  const seeds=[],kinds=[];
+  function layer(count,kind){
+    for(let i=0;i<count;i++){
+      const az=i*2.39996+kind*1.7,y=2*(i+.5)/count-1,r=Math.sqrt(1-y*y);
+      seeds.push(Math.cos(az)*r,y,Math.sin(az)*r,(.29+i*.61803)%1);kinds.push(kind);
+    }
+  }
+  layer(12,0);layer(20,1);layer(1,2);
+  geometry.setAttribute('birth',new T.InstancedBufferAttribute(new Float32Array(seeds),4));
+  geometry.setAttribute('kind',new T.InstancedBufferAttribute(new Float32Array(kinds),1));
+  geometry.instanceCount=kinds.length;
+  const pixels=new Uint8Array(32*32*4);
+  let seed=1823;
+  for(let i=0;i<pixels.length;i++){seed=(Math.imul(seed,1664525)+1013904223)>>>0;pixels[i]=seed>>>24;}
+  const noise=new T.DataTexture(pixels,32,32);
+  noise.wrapS=noise.wrapT=T.RepeatWrapping;noise.minFilter=noise.magFilter=T.LinearFilter;noise.needsUpdate=true;
+  const vertexShader=`
+    uniform float age,turn,air,wet;
+    uniform vec3 carry,wind;
+    attribute vec4 birth;attribute float kind;
+    varying vec2 q;varying float mode,t,s,fade;
+    void main(){
+      q=position.xy;mode=kind;s=birth.w;t=age;
+      vec3 d=birth.xyz;
+      d.xz=mat2(cos(turn),sin(turn),-sin(turn),cos(turn))*d.xz;
+      d.y=mix(.16+.86*abs(d.y),d.y,air);
+      vec3 drift=carry*(1.-exp(-2.8*age))+.48*wind*age*(1.-exp(-age));
+      vec3 p=drift;
+      float radius=1.;vec2 aspect=vec2(1.);
+      if(kind<.5){
+        t=age-s*.10;
+        float a=max(t,0.),spread=1.-exp(-3.4*a);
+        p+=d*spread*mix(3.7+s*2.8,2.4+s*2.6,wet);
+        p.y+=a*(1.75+s*.65);
+        radius=(1.2+4.2*spread+a*.8)*(.66+.45*s)*mix(1.,.76,wet);
+        fade=smoothstep(-.03,.10,t)*(1.-smoothstep(.67+s*.42,2.35+s*.57,t));
+        if(wet>.5){
+          float jet=smoothstep(.19,.72,s);
+          p.xz+=d.xz*spread*(3.2-1.5*jet);
+          p.y=.24+jet*max(0.,(9.+4.6*s)*a-6.7*a*a);
+          aspect=mix(vec2(1.38,.35),vec2(.51,1.58),jet);
+          fade*=1.-smoothstep(.85+s*.23,1.95+s*.24,t);
+        }
+      }else if(kind<1.5){
+        float speed=14.+s*24.;
+        vec3 launch=d*speed;
+        launch.y+=wet*(4.+s*6.);
+        float trail=max(0.,age-.045-.045*s);
+        p+=launch*(1.-exp(-1.7*age))*.7;
+        p.y-=5.*age*age;
+        vec3 tail=drift+launch*(1.-exp(-1.7*trail))*.7;
+        tail.y-=5.*trail*trail;
+        vec4 headEye=modelViewMatrix*vec4(p,1.),tailEye=modelViewMatrix*vec4(tail,1.);
+        vec2 delta=tailEye.xy*headEye.z-headEye.xy*tailEye.z;
+        vec2 normal=vec2(-delta.y,delta.x)/max(.001,length(delta));
+        vec4 eye=mix(tailEye,headEye,.5+.5*q.x);
+        eye.xy+=normal*q.y*(.055+.085*s)*(.52+.48*(.5+.5*q.x))*mix(1.,1.9,wet);
+        fade=(1.-smoothstep(.29+s*.35,.68+s*.43,age))*smoothstep(.40,3.,-eye.z);
+        gl_Position=projectionMatrix*eye;return;
+      }else{
+        radius=3.+11.*(1.-exp(-10.*age));
+        fade=(1.-smoothstep(.025,.26,age))*(1.-wet);
+      }
+      vec4 eye=modelViewMatrix*vec4(p,1.);
+      fade*=smoothstep(.7,5.5,-eye.z);
+      eye.xy+=q*radius*aspect;
+      gl_Position=projectionMatrix*eye;
+    }`;
+  const fragmentShader=`
+    uniform sampler2D noiseMap;uniform float wet;
+    varying vec2 q;varying float mode,t,s,fade;
+    void main(){
+      if(fade<.003)discard;
+      float opacity;vec3 color;
+      if(mode<.5){
+        float radius=length(q);if(radius>1.)discard;
+        vec2 uv=q*2.15+vec2(19.*s+.32*t,11.*s-.76*t);
+        float coarse=texture2D(noiseMap,uv/32.).r;
+        float fine=texture2D(noiseMap,(uv*2.38+vec2(t*.28,6.))/32.).g;
+        float grain=texture2D(noiseMap,(uv*5.1+vec2(3.,t*.25))/32.).b;
+        float n=.57*coarse+.29*fine+.14*grain;
+        float depth=1.-radius+(n-.5)*.67;
+        float body=smoothstep(.10,.33,depth);
+        float heat=(1.-smoothstep(.15+s*.13,.77+s*.32,t))*(.15+.71*n+.46*depth);
+        vec3 soot=mix(vec3(.043,.047,.054),vec3(.30,.32,.33),clamp(.17+.57*n+.22*q.y,0.,1.));
+        vec3 flame=mix(vec3(.62,.085,.009),vec3(1.,.49,.048),smoothstep(.26,.70,heat));
+        flame=mix(flame,vec3(1.,.92,.59),smoothstep(.60,.99,heat));
+        color=mix(soot,flame,smoothstep(.10,.42,heat));
+        vec3 foam=mix(vec3(.29,.43,.48),vec3(.91,.98,.98),clamp(.26+.82*n+.16*q.y,0.,1.));
+        color=mix(color,foam,wet);
+        opacity=body*fade*mix(.72,.51,wet);
+      }else if(mode<1.5){
+        opacity=(1.-smoothstep(.4,1.,abs(q.y)))*smoothstep(-1.,-.32,q.x)*fade;
+        color=mix(mix(vec3(1.,.19,.014),vec3(1.,.80,.34),smoothstep(-.3,.92,q.x)),vec3(.82,.97,1.),wet);
+      }else{
+        float r=length(q);opacity=(.30*exp(-4.*r*r)+.70*exp(-32.*r*r))*fade*(1.-smoothstep(.85,1.,r));
+        color=mix(vec3(1.,.37,.045),vec3(1.,.97,.80),exp(-7.*r*r));
+      }
+      if(opacity<.008)discard;
+      gl_FragColor=vec4(color,opacity);
+      #include <colorspace_fragment>
+    }`;
+  const pool=Array.from({length:3},()=>{
+    const uniforms={age:{value:0},turn:{value:0},air:{value:0},wet:{value:0},
+      carry:{value:new T.Vector3()},wind:{value:new T.Vector3()},noiseMap:{value:noise}};
+    const material=new T.ShaderMaterial({uniforms,vertexShader,fragmentShader,transparent:true,depthWrite:false,toneMapped:false});
+    const mesh=new T.Mesh(geometry,material);mesh.name='Fireball and spray';mesh.renderOrder=7;
+    mesh.frustumCulled=false;mesh.visible=false;group.add(mesh);return mesh;
+  });
+  let next=0;
+  function burst(pos,air,wet,windX,windZ,velocity){
+    const mesh=pool[next++%pool.length],u=mesh.material.uniforms;
+    mesh.position.copy(pos);mesh.visible=true;u.age.value=0;u.turn.value=Math.random()*2*Math.PI;
+    u.air.value=Number(air);u.wet.value=Number(wet);u.wind.value.set(windX,0,windZ);
+    if(velocity)u.carry.value.copy(velocity).multiplyScalar(.10).clampLength(0,9);
+    else u.carry.value.set(0,0,0);
+  }
+  function update(dt){
+    let active=0;
+    for(const mesh of pool){
+      if(!mesh.visible)continue;
+      const age=mesh.material.uniforms.age;age.value+=dt;
+      mesh.visible=age.value<2.93;if(mesh.visible)active++;
+    }
+    return active;
+  }
+  function reset(){for(const mesh of pool)mesh.visible=false;next=0;}
+  return {burst,update,reset};
 }
 
 // Short-lived visual feedback for the game world's water, breakable markers and airframe.
 function createRangeEffects(THREE, scene) {
   const group=new THREE.Group();
   group.name='Range event effects';group.visible=false;scene.add(group);
+  const clouds=createFlightBursts(THREE,group);
   const count=192;
   const positions=new Float32Array(count*3),motion=new Float32Array(count*3);
   const stats=new Float32Array(count*4),colors=new Float32Array(count*3);
@@ -5177,11 +5371,18 @@ function createRangeEffects(THREE, scene) {
         float radius=length(q);
         float contour=.82+.074*sin(4.*a+info.w)+.044*cos(7.*a-info.w);
         float shape=1.-smoothstep(.13,contour,radius);
+        vec3 color=tint;
         if(info.z>.5&&info.z<1.5)shape=1.-smoothstep(.16,1.,length(q*vec2(1.02,1.45)));
-        if(info.z>1.5)shape=1.-smoothstep(.03,.98,length(q*vec2(1.15,.82)));
+        if(info.z>1.5&&info.z<2.5)shape=1.-smoothstep(.03,.98,length(q*vec2(1.15,.82)));
+        if(info.z>2.5){
+          float folds=.5+.5*sin(q.x*7.4+info.w+sin(q.y*8.4-info.w));
+          shape=1.-smoothstep(.28,.90,radius+.13*(folds-.5));
+          float heat=smoothstep(.48,.84,info.y)*smoothstep(.03,.85,shape+.19*folds);
+          color=mix(tint*(.69+.55*folds),mix(vec3(.91,.15,.012),vec3(1.,.65,.10),folds),heat);
+        }
         float opacity=shape*info.y;
         if(opacity<.006)discard;
-        gl_FragColor=vec4(tint,opacity);
+        gl_FragColor=vec4(color,opacity);
         #include <colorspace_fragment>
       }`
   }));
@@ -5228,19 +5429,31 @@ function createRangeEffects(THREE, scene) {
     stats[k]=p.size;stats[k+1]=kind===0?.44:.95;stats[k+2]=kind;stats[k+3]=Math.random()*9;
     shade.setHex(color);colors[j]=shade.r;colors[j+1]=shade.g;colors[j+2]=shade.b;
   }
-  function burst(pos,type,windX=0,windZ=0){
+  function trail(pos,windX=0,windZ=0,burning=true){
     if(!pos)return;
-    const water=type==='water'||type==='splash',hit=type==='hit'||type==='target';
-    if(!water&&!hit&&type!=='crash')return;
     group.visible=true;
+    if(burning){
+      emit(pos,3,windX,windZ,.78,1.1,2.7,5.4,2.05,0x53575b,-Infinity);
+      emit(pos,1,windX,windZ,.79,3.7,3.,.42,.63,0xffc05e,-Infinity);
+    }else{
+      emit(pos,0,windX,windZ,.38,.43,1.2,2.5,1.15,0x727579,-Infinity);
+    }
+    atPos.needsUpdate=atInfo.needsUpdate=atColor.needsUpdate=true;
+  }
+  function burst(pos,type,windX=0,windZ=0,velocity=null){
+    if(!pos)return;
+    const water=type==='water'||type==='splash',hit=type==='hit'||type==='target',air=type==='knockout';
+    if(!water&&!hit&&!air&&type!=='crash')return;
+    group.visible=true;
+    if(!hit)clouds.burst(pos,air,water,windX,windZ,velocity);
     if(water){
-      const ring=rings[nextRing++%rings.length];ring.age=0;ring.active=true;ring.size=6.4;
+      const ring=rings[nextRing++%rings.length];ring.age=0;ring.active=true;ring.size=14;
       ring.mesh.position.set(pos.x,pos.y+.08,pos.z);ring.mesh.scale.setScalar(1.1);ring.mesh.visible=true;ring.mesh.material.uniforms.fade.value=.80;
-      for(let i=0;i<35;i++)emit(pos,2,windX,windZ,.57,4.8,7,.29,1.18,i%3?0xc7dbd9:0xe5efeb,pos.y);
+      for(let i=0;i<35;i++)emit(pos,2,windX,windZ,.95,9.2,13,.49,1.65,i%3?0xc7dbd9:0xe5efeb,pos.y);
       for(let i=0;i<14;i++)emit(pos,0,windX,windZ,.74,2.8,2.4,.9,1.24,i%2?0xb8cccb:0xcdd5ce,pos.y);
     }else{
-      const n=hit?8:15, floor=pos.y-(hit?3.4:0);
-      for(let i=0;i<n;i++)emit(pos,0,windX,windZ,hit?.40:.90,hit?1.4:3.1,hit?1.7:3.3,hit?.8:1.52,hit?1.25:3.35,i%3?0x686967:0x9c9485,floor);
+      const floor=air?-Infinity:pos.y-(hit?3.4:0);
+      if(hit)for(let i=0;i<8;i++)emit(pos,0,windX,windZ,.40,1.4,1.7,.8,1.25,i%3?0x686967:0x9c9485,floor);
       for(let i=0;i<(hit?13:25);i++)emit(pos,1,windX,windZ,hit?.18:.55,hit?5.6:8.5,hit?3.0:4.3,hit?.13:.18,hit?.48:.76,i%3?0xe5ae64:0xf4cd84,floor);
       for(let i=0;i<(hit?4:11);i++){
         const p=parts[nextPart++%parts.length],a=Math.random()*Math.PI*2,side=(hit?3.1:6.1)*(.3+Math.random());
@@ -5256,11 +5469,11 @@ function createRangeEffects(THREE, scene) {
   function update(dt,windX=0,windZ=0){
     if(!group.visible)return;
     dt=Math.max(0,Math.min(.12,dt||0));
-    let alive=0;
+    let alive=clouds.update(dt);
     for(let i=0;i<count;i++){
       const p=particle[i],k=i*4,j=i*3;
       if(p.life<=0)continue;
-      p.life=Math.max(0,p.life-dt);const u=1-p.life/p.duration,puff=p.kind===0,wet=p.kind===2;
+      p.life=Math.max(0,p.life-dt);const u=1-p.life/p.duration,hot=p.kind===3,puff=p.kind===0||hot,wet=p.kind===2;
       const drag=Math.min(1,(puff?1.26:.37)*dt);
       motion[j]+=(windX*(puff?.82:.13)-motion[j])*drag;
       motion[j+2]+=(windZ*(puff?.82:.13)-motion[j+2])*drag;
@@ -5268,7 +5481,7 @@ function createRangeEffects(THREE, scene) {
       positions[j]+=motion[j]*dt;positions[j+1]+=motion[j+1]*dt;positions[j+2]+=motion[j+2]*dt;
       if(!puff&&positions[j+1]<p.floor)p.life=0;
       stats[k]=p.size*(puff?1+u*2.15:1-u*.43);
-      stats[k+1]=p.life>0?(puff?.53*(1-u)*(1-u):(.88*(1-u))):0;
+      stats[k+1]=p.life>0?(puff?(hot?.89:.53)*(1-u)*(1-u):(.88*(1-u))):0;
       if(p.life>0)alive++;
     }
     let drawn=0;
@@ -5276,7 +5489,8 @@ function createRangeEffects(THREE, scene) {
       if(p.life<=0)continue;p.life=Math.max(0,p.life-dt);if(!p.life)continue;
       p.v.y-=10.1*dt;p.p.addScaledVector(p.v,dt);if(p.p.y<p.floor+.027){p.p.y=p.floor+.027;p.v.y=Math.abs(p.v.y)*.16;p.v.x*=.82;p.v.z*=.82;}
       p.angle.x+=dt*p.spin.x;p.angle.y+=dt*p.spin.y;p.angle.z+=dt*p.spin.z;
-      dummy.position.copy(p.p);dummy.rotation.copy(p.angle);dummy.scale.copy(p.scale).multiplyScalar(Math.min(1,p.life/.23));
+      dummy.position.copy(p.p);dummy.rotation.copy(p.angle);
+      dummy.scale.copy(p.scale).multiplyScalar(Math.min(1,p.life/.23,(p.duration-p.life)/.12));
       dummy.updateMatrix();fragments.setMatrixAt(drawn,dummy.matrix);fragments.setColorAt(drawn,shade.setHex(p.color));drawn++;
     }
     fragments.count=drawn;
@@ -5293,11 +5507,11 @@ function createRangeEffects(THREE, scene) {
     group.visible=alive>0;
   }
   function reset(){
-    group.visible=false;next=nextPart=nextRing=0;fragments.count=0;
+    group.visible=false;clouds.reset();next=nextPart=nextRing=0;fragments.count=0;
     particle.forEach((p,i)=>{p.life=0;stats[i*4+1]=0;});parts.forEach(p=>{p.life=0;});
     rings.forEach(r=>{r.mesh.visible=r.active=false;});atInfo.needsUpdate=true;
   }
-  return {burst,update,reset};
+  return {burst,trail,update,reset};
 }
 
 /* Colour-marked foam props and an animated capsule game for the offshore range. */
@@ -5440,93 +5654,470 @@ function createTrainingRange(T,scene,coast,jet,fx,announce){
     get ammo(){return jet.mounts.reduce((n,slot)=>n+Number(slot.store.visible),0);},get hits(){return hitCount;},get inFlight(){return shots.length;}};
 }
 
-// Six sparks fan out behind the aircraft. Each point samples a short stretch of its trail.
+// Each flare paints a short incandescent ribbon, leaving drifting smoke as it cools.
 function createDuelFlares(T,root){
-  const duration=1.15,geometry=new T.BufferGeometry();
-  const origins=[],velocities=[],lags=[];
-  let lureHead=0;
+  const burnTime=1.25,smokeLife=.78,duration=burnTime+smokeLife+.14;
+  const pointOrigins=[],pointVelocities=[],emissions=[];
+  const trailOrigins=[],trailVelocities=[],trailUV=[],indices=[];
+  const lureOrigin=new T.Vector3(),lureVelocity=new T.Vector3(),viewport=new T.Vector4();
   for(const side of [-1,1]){
     for(let fan=0;fan<3;fan++){
-      if(side===1&&fan===1)lureHead=lags.length;
-      for(let tail=0;tail<8;tail++){
-        origins.push(side*2.8,-.35,2.1);
-        velocities.push(side*(8+5*fan),1.5+fan*3,19-3*fan);
-        lags.push(tail*.024);
+      const origin=[side*2.8,-.35,2.1],velocity=[side*(8+5*fan),1.5+fan*3,19-3*fan];
+      if(side===1&&fan===1){lureOrigin.fromArray(origin);lureVelocity.fromArray(velocity);}
+      // The middle starboard flare releases first and remains the visible interception point.
+      const delay=[.055,0,.105][fan]+(side<0?.018:0),seed=fan*2.13+side*1.37;
+      // A negative emission time marks the glowing head. Other points detach along its path.
+      pointOrigins.push(...origin);pointVelocities.push(...velocity);emissions.push(-1,seed,delay);
+      for(let sample=0;sample<26;sample++){
+        pointOrigins.push(...origin);pointVelocities.push(...velocity);
+        emissions.push(sample*.048,seed+sample*2.4,delay);
+      }
+      const base=trailOrigins.length/3,segments=10;
+      for(let row=0;row<=segments;row++){
+        for(const edge of [-1,1]){
+          trailOrigins.push(...origin);trailVelocities.push(...velocity);trailUV.push(row/segments,edge,delay);
+        }
+        if(row<segments){
+          const v=base+row*2;indices.push(v,v+1,v+2,v+1,v+3,v+2);
+        }
       }
     }
   }
-  geometry.setAttribute('position',new T.Float32BufferAttribute(origins,3));
-  geometry.setAttribute('velocity',new T.Float32BufferAttribute(velocities,3));
-  geometry.setAttribute('lag',new T.Float32BufferAttribute(lags,1));
-  const lureOrigin=new T.Vector3().fromBufferAttribute(geometry.attributes.position,lureHead);
-  const lureVelocity=new T.Vector3().fromBufferAttribute(geometry.attributes.velocity,lureHead);
-  const viewport=new T.Vector4();
+  function geometry(origins,velocities,attr,data){
+    const g=new T.BufferGeometry();
+    g.setAttribute('position',new T.Float32BufferAttribute(origins,3));
+    g.setAttribute('velocity',new T.Float32BufferAttribute(velocities,3));
+    g.setAttribute(attr,new T.Float32BufferAttribute(data,3));
+    return g;
+  }
+  const particles=geometry(pointOrigins,pointVelocities,'emission',emissions);
+  const ribbons=geometry(trailOrigins,trailVelocities,'ribbonData',trailUV);
+  ribbons.setIndex(indices);
+
+  const pathShader=`
+    attribute vec3 velocity;
+    uniform float age,viewportHeight;
+    vec3 path(float t){
+      vec3 p=(modelMatrix*vec4(position+velocity*t,1.)).xyz;
+      p.y-=5.*t*t;
+      return p;
+    }
+    float pixelsPerUnit(vec4 eye){
+      return .5*viewportHeight*projectionMatrix[1][1]/max(.05,-eye.z);
+    }
+  `;
   function cloud(name){
-    const material=new T.ShaderMaterial({
-      uniforms:{age:{value:0},fade:{value:1},viewportHeight:{value:720}},
-      depthWrite:false,transparent:true,toneMapped:false,
-      vertexShader:`
-        attribute vec3 velocity;
-        attribute float lag;
-        uniform float age,viewportHeight;
-        varying float heat;
+    const uniforms={age:{value:0},viewportHeight:{value:720}};
+    const settings={uniforms,transparent:true,depthWrite:false,toneMapped:false};
+    const ribbonMat=new T.ShaderMaterial({...settings,side:T.DoubleSide,
+      vertexShader:pathShader+`
+        attribute vec3 ribbonData;
+        varying vec2 stroke;
+        varying float fade;
         void main(){
-          float t=max(0.0,age-lag);
-          heat=1.0-lag/0.21;
-          vec4 world=modelMatrix*vec4(position+velocity*t,1.0);
-          world.y-=5.0*t*t;
-          vec4 eye=viewMatrix*world;
+          stroke=ribbonData.xy;
+          float elapsed=age-ribbonData.z;
+          float head=clamp(elapsed,0.,${burnTime}),t=head-min(head,.43)*stroke.x;
+          fade=1.-smoothstep(.74,${burnTime},elapsed);
+          vec3 p=path(t);
+          vec4 eye=viewMatrix*vec4(p,1.);
+          vec3 tangent=mat3(viewMatrix)*(path(t+.01)-p);
+          vec2 dir=tangent.xy-tangent.z*eye.xy/min(-.05,eye.z);
+          vec2 normal=vec2(-dir.y,dir.x)*inversesqrt(max(.0000001,dot(dir,dir)));
+          float width=max(.8/pixelsPerUnit(eye),mix(.26,.055,stroke.x));
+          eye.xy+=normal*stroke.y*width;
           gl_Position=projectionMatrix*eye;
-          float scale=viewportHeight*projectionMatrix[1][1]/max(0.1,-eye.z);
-          gl_PointSize=clamp((0.5+1.0*heat)*scale,2.0,72.0);
-          if(lag>age)gl_Position=vec4(2.,2.,2.,1.);
         }`,
       fragmentShader:`
-        varying float heat;
-        uniform float fade;
+        varying vec2 stroke;
+        varying float fade;
         void main(){
-          float radius=length(gl_PointCoord*2.0-1.0);
-          float alpha=(1.0-smoothstep(0.12,1.0,radius))*(0.2+0.8*heat)*fade;
-          if(alpha<0.01)discard;
-          float core=(1.0-smoothstep(0.12,0.64,radius))*heat;
-          gl_FragColor=vec4(mix(vec3(1.,0.31,0.025),vec3(1.,0.94,0.65),core),alpha);
+          float edge=abs(stroke.y),tail=1.-stroke.x;
+          float alpha=(1.-smoothstep(.20,1.,edge))*pow(tail,.64)*fade;
+          vec3 color=mix(vec3(.85,.12,.012),vec3(1.,.78,.37),tail*tail*(1.-edge));
+          gl_FragColor=vec4(color,alpha);
           #include <colorspace_fragment>
         }`
     });
-    const sparks=new T.Points(geometry,material);
-    sparks.name=name;sparks.visible=false;sparks.frustumCulled=false;sparks.renderOrder=8;
-    sparks.onBeforeRender=renderer=>{material.uniforms.viewportHeight.value=renderer.getCurrentViewport(viewport).w;};
-    root.add(sparks);
-    return sparks;
+    ribbonMat.forceSinglePass=true;
+    const pointMat=new T.ShaderMaterial({...settings,
+      vertexShader:pathShader+`
+        attribute vec3 emission;
+        varying float smokeAge,intensity,seed;
+        void main(){
+          bool head=emission.x<0.;
+          float elapsed=age-emission.z;
+          smokeAge=head?-1.:elapsed-emission.x;seed=emission.y;
+          float t=head?clamp(elapsed,0.,${burnTime}):emission.x;
+          vec3 p=path(t);
+          float diameter;
+          if(head){
+            intensity=(1.-smoothstep(.74,${burnTime},elapsed))*(.94+.06*sin(31.*elapsed+seed));
+            diameter=mix(1.,3.5,intensity);
+          }else{
+            float a=max(0.,smokeAge);
+            p+=vec3(.65+sin(seed)*.42,.7+.26*cos(seed),.3*sin(seed+1.))*a;
+            intensity=smoothstep(0.,.09,a)*(1.-smoothstep(.22,${smokeLife},a))*
+                      (1.-smoothstep(.9,${burnTime},t));
+            diameter=(1.05+2.9*a)*(.95+.10*sin(seed));
+          }
+          vec4 eye=viewMatrix*vec4(p,1.);
+          gl_Position=projectionMatrix*eye;
+          gl_PointSize=clamp(diameter*pixelsPerUnit(eye),head?5.:1.,96.);
+          if(elapsed<0.||intensity<.002||(!head&&smokeAge<0.))gl_Position=vec4(2.,2.,2.,1.);
+        }`,
+      fragmentShader:`
+        varying float smokeAge,intensity,seed;
+        void main(){
+          vec2 uv=gl_PointCoord*2.-1.;
+          float r=length(uv);
+          vec3 color;float alpha;
+          if(smokeAge<0.){
+            float hot=exp(-20.*r*r);
+            float glow=1.-smoothstep(.16,1.,r);
+            color=mix(vec3(1.,.29,.024),vec3(1.,.98,.78),exp(-10.*r*r));
+            alpha=(hot+.78*(1.-hot)*glow*glow)*intensity;
+          }else{
+            float cloud=r+.085*sin(6.*uv.x+seed)*sin(5.*uv.y-seed);
+            alpha=.31*intensity*(1.-smoothstep(.14,1.,cloud));
+            color=mix(vec3(.28,.25,.24),vec3(.66,.63,.58),clamp(.55-.38*uv.y+.1*sin(seed),0.,1.));
+          }
+          if(alpha<.005)discard;
+          gl_FragColor=vec4(color,alpha);
+          #include <colorspace_fragment>
+        }`
+    });
+    const trail=new T.Mesh(ribbons,ribbonMat),points=new T.Points(particles,pointMat),group=new T.Group();
+    trail.renderOrder=7;points.renderOrder=8;
+    for(const layer of [trail,points]){
+      layer.frustumCulled=false;
+      layer.onBeforeRender=renderer=>{uniforms.viewportHeight.value=renderer.getCurrentViewport(viewport).w;};
+      group.add(layer);
+    }
+    group.name=name;group.visible=false;root.add(group);
+    return {group,age:uniforms.age};
   }
   const clouds=[cloud('我机干扰弹'),cloud('敌机干扰弹')];
   function burst(enemy,position,quaternion,target,travelTime=0){
-    const sparks=clouds[enemy?1:0],uniforms=sparks.material.uniforms;
-    sparks.position.copy(position);
-    if(quaternion)sparks.quaternion.copy(quaternion);else sparks.quaternion.identity();
-    uniforms.age.value=0;uniforms.fade.value=1;sparks.visible=true;
+    const {group,age}=clouds[enemy?1:0];
+    group.position.copy(position);
+    if(quaternion)group.quaternion.copy(quaternion);else group.quaternion.identity();
+    age.value=0;group.visible=true;
     if(target){
-      // The shader adds its downward arc after transforming the spark into world space.
-      sparks.updateWorldMatrix(true,false);
-      target.copy(lureOrigin).addScaledVector(lureVelocity,travelTime).applyMatrix4(sparks.matrixWorld);
+      group.updateWorldMatrix(true,false);
+      target.copy(lureOrigin).addScaledVector(lureVelocity,travelTime).applyMatrix4(group.matrixWorld);
       target.y-=5*travelTime*travelTime;
     }
   }
   function step(dt){
-    for(const sparks of clouds){
-      if(!sparks.visible)continue;
-      const uniforms=sparks.material.uniforms;
-      uniforms.age.value+=dt;
-      uniforms.fade.value=Math.min(1,Math.max(0,(duration-uniforms.age.value)/.55));
-      sparks.visible=uniforms.age.value<duration;
+    for(const {group,age} of clouds){
+      if(!group.visible)continue;
+      age.value+=dt;group.visible=age.value<duration;
     }
   }
-  function reset(){for(const sparks of clouds)sparks.visible=false;}
+  function reset(){for(const {group} of clouds)group.visible=false;}
   return {burst,step,reset};
 }
 
-// A one-on-one arcade match. Each pulse can remove one of three shield cells.
-function createFlightDuel(T,scene,coast,onEvent,jet){
+// One small contact flash, a spray of cooling metal and a short wisp of smoke.
+function createDuelImpact(T, root) {
+  const duration = .83;
+  const geometry = new T.BufferGeometry();
+  const vertices = [], motions = [], traits = [], indices = [];
+  // Draw smoke first so the contact and hot particles stay crisp.
+  const kinds = [...Array(7).fill(0), ...Array(5).fill(1), ...Array(12).fill(2), 3];
+  for (let i = 0; i < kinds.length; i++) {
+    const kind = kinds[i], seed = ((i + 1) * .618034) % 1;
+    const angle = i * 2.39996, radius = kind === 0 ? 1.6 : 5 + 11 * seed;
+    const speed = [Math.cos(angle) * radius, Math.sin(angle) * radius, kind === 0 ? .9 : 3 + 7 * (1 - seed)];
+    const delay = kind === 0 ? i * .026 : 0;
+    const life = kind === 0 ? .51 + .16 * seed : kind === 3 ? .115 : .24 + .16 * seed;
+    const first = vertices.length / 3;
+    for (const [x,y] of [[-1,-1],[1,-1],[1,1],[-1,1]]) {
+      vertices.push(x, y, 0);
+      motions.push(...speed);
+      traits.push(kind, seed, delay, life);
+    }
+    indices.push(first, first+1, first+2, first, first+2, first+3);
+  }
+  geometry.setIndex(indices);
+  geometry.setAttribute('position', new T.Float32BufferAttribute(vertices, 3));
+  geometry.setAttribute('motion', new T.Float32BufferAttribute(motions, 3));
+  geometry.setAttribute('trait', new T.Float32BufferAttribute(traits, 4));
+
+  const viewport = new T.Vector4();
+  function cloud(name) {
+    const material = new T.ShaderMaterial({
+      uniforms: {
+        age: {value: 0}, airspeed: {value: new T.Vector3()},
+        attached: {value: new T.Vector3()}, viewHeight: {value: 720}
+      },
+      transparent: true, depthWrite: false, toneMapped: false,
+      vertexShader: `
+        attribute vec3 motion;
+        attribute vec4 trait;
+        uniform float age, viewHeight;
+        uniform vec3 airspeed, attached;
+        varying vec2 q;
+        varying float kind, seed, u;
+        void main() {
+          q = position.xy;
+          kind = trait.x; seed = trait.y;
+          float t = max(0., age - trait.z);
+          u = t / trait.w;
+          if (age < trait.z || u >= 1.) { gl_Position = vec4(2.,2.,2.,1.); return; }
+          vec3 departure = mat3(modelMatrix) * motion;
+          float drag = kind < .5 ? 5.5 : 1.8;
+          float travel = (1. - exp(-drag*t)) / drag;
+          vec3 offset = airspeed * (trait.z + travel) + departure * travel;
+          offset.y += kind < .5 ? 1.8 * t : -3.9 * t*t;
+          if (kind > 2.5) offset = attached;
+          vec4 eye = viewMatrix * vec4(modelMatrix[3].xyz + offset, 1.);
+          float pixel = max(.01, -2.*eye.z / (viewHeight * projectionMatrix[1][1]));
+          vec2 axes;
+          vec2 dir = vec2(1.,0.);
+          if (kind < .5) {
+            axes = vec2(.31 + (1.1 + .68*seed)*u, .29 + (1. + .31*seed)*u);
+          } else if (kind < 1.5) {
+            float spin = seed*18. + t*(9. + seed*20.);
+            dir = vec2(cos(spin),sin(spin));
+            axes = max(vec2(.22, .085) * (.7+seed), pixel*vec2(.95,.60));
+          } else if (kind < 2.5) {
+            vec3 move = mat3(viewMatrix) * (departure + .05*airspeed);
+            vec2 projected = move.xy + eye.xy * move.z / max(.1,-eye.z);
+            dir = normalize(projected + vec2(.0001,0.));
+            axes = max(vec2((.35 + .63*seed)*(1.-.43*u), .065), pixel*vec2(1.45,.68));
+          } else {
+            axes = vec2(1.4,1.12) * (1.-.40*u);
+          }
+          eye.xy += q.x*axes.x*dir + q.y*axes.y*vec2(-dir.y,dir.x);
+          gl_Position = projectionMatrix * eye;
+        }`,
+      fragmentShader: `
+        varying vec2 q;
+        varying float kind, seed, u;
+        void main() {
+          float r = length(q), a;
+          vec3 ink;
+          if (kind < .5) {
+            float angle = atan(q.y, q.x + .00001);
+            float edge = .80 + .11*sin(3.*angle + seed*24.) + .06*cos(5.*angle - seed*11.);
+            a = (1.-smoothstep(.19, edge, r)) * (1.-u)*(1.-u) * .57;
+            ink = mix(vec3(.052,.047,.045), vec3(.28,.27,.25), u + .13*r);
+          } else if (kind < 1.5) {
+            float edge = max(abs(q.x), abs(q.y + .28*q.x) + .29*q.x);
+            a = (1.-smoothstep(.73,1.,edge))*(1.-smoothstep(.64,1.,u));
+            ink = mix(vec3(.055,.057,.059), vec3(.43,.38,.27), step(0.,q.y+.32*q.x));
+          } else if (kind < 2.5) {
+            a = (1.-smoothstep(.23,1.,r))*(1.-u*u);
+            ink = mix(vec3(.55,.16,.025), vec3(1.,.94,.65), (1.-u)*(1.-.65*r));
+          } else {
+            float core = exp(-12.*r*r);
+            a = (core + .69*exp(-3.2*r*r)) * (1.-u*u)*(1.-smoothstep(.80,1.,r));
+            ink = mix(vec3(.97,.34,.055),vec3(1.,1.,.90),core);
+          }
+          if (a < .008) discard;
+          gl_FragColor = vec4(ink, min(1.,a));
+          #include <colorspace_fragment>
+        }`
+    });
+    const mesh = new T.Mesh(geometry, material);
+    mesh.name = name;
+    mesh.visible = false;
+    mesh.frustumCulled = false;
+    mesh.renderOrder = 9;
+    mesh.onBeforeRender = renderer => { material.uniforms.viewHeight.value = renderer.getCurrentViewport(viewport).w; };
+    root.add(mesh);
+    return {mesh, center: new T.Vector3()};
+  }
+
+  const impacts = [cloud('我机受击'), cloud('敌机受击')];
+  const normal = new T.Vector3(), local = new T.Vector3(), inverse = new T.Quaternion(), z = new T.Vector3(0,0,1);
+  function burst(enemy, position, rotation, source, velocity) {
+    const event = impacts[enemy ? 1 : 0], mesh = event.mesh, uniforms = mesh.material.uniforms;
+    if (source) normal.subVectors(source, position);
+    else normal.set(0, 0, 1);
+    if (normal.lengthSq() < 1e-8) normal.set(0, 0, 1);
+    normal.normalize();
+    local.copy(normal);
+    if (rotation) local.applyQuaternion(inverse.copy(rotation).invert());
+    // Place the flash on the facing side of the fuselage in aircraft-local coordinates.
+    const extent = 1 / Math.hypot(local.x / 1.82, local.y / 1.02, local.z / (local.z < 0 ? 7.9 : 6.4));
+    mesh.position.copy(position).addScaledVector(normal, extent + .16);
+    mesh.quaternion.setFromUnitVectors(z, normal);
+    mesh.rotateZ(Math.random() * 2 * Math.PI);
+    event.center.copy(position);
+    uniforms.attached.value.set(0,0,0);
+    if (velocity) uniforms.airspeed.value.copy(velocity);
+    else uniforms.airspeed.value.set(0,0,0);
+    uniforms.age.value = 0;
+    mesh.visible = true;
+  }
+
+  function step(dt, playerPosition, rivalPosition) {
+    for (let i = 0; i < impacts.length; i++) {
+      const {mesh,center} = impacts[i];
+      if (!mesh.visible) continue;
+      const uniforms = mesh.material.uniforms;
+      uniforms.age.value += dt;
+      mesh.visible = uniforms.age.value < duration;
+      const position = i === 0 ? playerPosition : rivalPosition;
+      if (position) uniforms.attached.value.subVectors(position, center);
+    }
+  }
+
+  function reset() { for (const {mesh} of impacts) mesh.visible = false; }
+  return {burst, step, reset, get visible() { return impacts[0].mesh.visible || impacts[1].mesh.visible; }};
+}
+
+// The duel supplies the flight path. Only the round and its exhaust are animated here.
+function createDuelMissile(T,root,enemy,roundMesh){
+  const body=new T.Group(),nose=new T.Vector3(0,0,-1),heading=new T.Vector3();
+  body.name=enemy?'敌机飞行弹体':'我机飞行弹体';
+  roundMesh.traverse(part=>{part.castShadow=false;});
+  body.add(roundMesh);root.add(body);
+
+  // Both shells use the same warm exhaust. Its brightest part sits inside the nozzle.
+  function flame(color,opacity,radius,length){
+    const geo=new T.ConeGeometry(radius,length,12,1,true);
+    geo.rotateX(Math.PI/2);geo.translate(0,0,length*.5);
+    const mat=new T.MeshBasicMaterial({color,transparent:true,opacity,depthWrite:false,toneMapped:false,side:T.DoubleSide});
+    mat.forceSinglePass=true;
+    return new T.Mesh(geo,mat);
+  }
+  const jet=new T.Group();
+  jet.position.z=1.235;
+  const sheath=flame(0xff9947,.43,.14,2.45),core=flame(0xffefd0,.95,.095,1.10);
+  sheath.renderOrder=7;core.renderOrder=8;jet.add(sheath,core);body.add(jet);
+  const glowGeo=new T.BufferGeometry();glowGeo.setAttribute('position',new T.Float32BufferAttribute([0,0,.12],3));
+  const viewport=new T.Vector4(),glowMat=new T.ShaderMaterial({
+    uniforms:{height:{value:720},power:{value:0}},transparent:true,depthWrite:false,toneMapped:false,
+    vertexShader:`
+      uniform float height;
+      void main(){
+        vec4 eye=modelViewMatrix*vec4(position,1.);gl_Position=projectionMatrix*eye;
+        gl_PointSize=clamp(.54*height*projectionMatrix[1][1]/max(.08,-eye.z),3.,52.);
+      }`,
+    fragmentShader:`
+      uniform float power;
+      void main(){
+        float r=length(gl_PointCoord*2.-1.),hot=exp(-24.*r*r),halo=1.-smoothstep(0.,1.,r);
+        gl_FragColor=vec4(mix(vec3(1.,.36,.06),vec3(1.,.96,.73),hot),(hot+.55*(1.-hot)*halo*halo)*power);
+        #include <colorspace_fragment>
+      }`
+  });
+  const glow=new T.Points(glowGeo,glowMat);glow.renderOrder=8;
+  glow.onBeforeRender=r=>{glowMat.uniforms.height.value=r.getCurrentViewport(viewport).w;};
+  jet.add(glow);
+
+  // Sample the visible nozzle in the scene, so old smoke stays behind during turns.
+  const smokeLife=1.22,interval=1/58,capacity=Math.ceil(smokeLife/interval)+3,rows=capacity+1;
+  const samples=new Float32Array(capacity*3),births=new Float32Array(capacity);
+  const points=new Float32Array(rows*6),directions=new Float32Array(rows*6),stamps=new Float32Array(rows*4);
+  const geo=new T.BufferGeometry(),index=[];
+  function dynamic(name,array,components){
+    geo.setAttribute(name,new T.BufferAttribute(array,components).setUsage(T.DynamicDrawUsage));
+  }
+  dynamic('position',points,3);dynamic('pathTangent',directions,3);dynamic('stamp',stamps,2);
+  for(let i=0;i<rows-1;i++){const v=i*2;index.push(v,v+1,v+2,v+1,v+3,v+2);}
+  geo.setIndex(index);geo.setDrawRange(0,0);
+  const smokeMat=new T.ShaderMaterial({
+    uniforms:{clock:{value:0},height:{value:720},endAt:{value:100}},transparent:true,depthWrite:false,side:T.DoubleSide,toneMapped:false,
+    vertexShader:`
+      attribute vec3 pathTangent;
+      attribute vec2 stamp;
+      uniform float clock,height;
+      varying float edge,age,along;
+      void main(){
+        edge=stamp.x;along=stamp.y;age=max(0.,clock-along);
+        float swell=1.-exp(-3.*age),wave=sin(along*35.+.55*sin(along*67.));
+        vec3 p=position+vec3(.5+.42*wave,.78+.32*cos(along*38.),.13*wave)*age;
+        vec4 eye=modelViewMatrix*vec4(p,1.);
+        vec3 d=mat3(modelViewMatrix)*pathTangent;
+        vec2 tangent=d.xy-d.z*eye.xy/min(-.08,eye.z);
+        vec2 normal=vec2(-tangent.y,tangent.x)*inversesqrt(max(.000001,dot(tangent,tangent)));
+        float width=(.14+1.00*swell)*(.90+.16*wave*swell);
+        eye.xy+=normal*edge*max(width,1.9*max(.08,-eye.z)/(height*projectionMatrix[1][1]));
+        gl_Position=projectionMatrix*eye;
+      }`,
+    fragmentShader:`
+      uniform float endAt;
+      varying float edge,age,along;
+      void main(){
+        float center=abs(edge+.09*sin(along*45.+edge*3.));
+        float opacity=(1.-smoothstep(.06,1.,center))*(1.-smoothstep(.19,${smokeLife},age));
+        opacity*=smoothstep(.045,.072,along)*(.60+.10*sin(along*51.+edge*2.));
+        opacity*=1.-smoothstep(endAt-.045,endAt,along)*smoothstep(.08,.3,age);
+        float light=clamp(.68-.17*edge+.10*cos(along*42.)+.12*age,0.,1.);
+        vec3 smoke=mix(vec3(.34,.34,.32),vec3(.88,.86,.81),light);
+        gl_FragColor=vec4(smoke,opacity);
+        #include <colorspace_fragment>
+      }`
+  });
+  smokeMat.forceSinglePass=true;
+  const smoke=new T.Mesh(geo,smokeMat);smoke.name='发动机烟迹';smoke.frustumCulled=false;smoke.renderOrder=5;
+  smoke.onBeforeRender=r=>{smokeMat.uniforms.height.value=r.getCurrentViewport(viewport).w;};
+  root.add(smoke);
+  const prev=new T.Vector3(),tip=new T.Vector3(),sample=new T.Vector3();
+  let start=0,count=0,nextSample=0,flightTime=0;
+  function pose(position,direction){
+    body.position.copy(position);
+    if(direction.lengthSq()>1e-8)body.quaternion.setFromUnitVectors(nose,heading.copy(direction).normalize());
+  }
+  function nozzle(){
+    return tip.set(0,0,jet.position.z).applyQuaternion(body.quaternion).add(body.position);
+  }
+  function append(p,t){
+    const slot=(start+count)%capacity;p.toArray(samples,3*slot);births[slot]=t;
+    if(count===capacity)start=(start+1)%capacity;else count++;
+  }
+  function ribbon(){
+    if(count===0)return;
+    // The final row follows the nozzle between regularly spaced samples.
+    for(let i=0;i<=count;i++){
+      const slot=(start+i)%capacity,k=i*6,t=i===count?flightTime:births[slot];
+      if(i===count)tip.toArray(points,k);else for(let j=0;j<3;j++)points[k+j]=samples[3*slot+j];
+      points.copyWithin(k+3,k,k+3);
+      const n=i*4;stamps[n]=-1;stamps[n+1]=t;stamps[n+2]=1;stamps[n+3]=t;
+    }
+    for(let i=0;i<=count;i++){
+      const a=Math.max(0,i-1)*6,b=Math.min(count,i+1)*6,k=i*6;
+      for(let j=0;j<3;j++)directions[k+j]=directions[k+3+j]=points[b+j]-points[a+j];
+    }
+    geo.attributes.position.needsUpdate=geo.attributes.pathTangent.needsUpdate=geo.attributes.stamp.needsUpdate=true;
+    geo.setDrawRange(0,count*6);smoke.visible=true;
+  }
+  function reset(){
+    body.visible=jet.visible=smoke.visible=false;geo.setDrawRange(0,0);
+    start=count=flightTime=0;smokeMat.uniforms.clock.value=0;smokeMat.uniforms.endAt.value=100;
+  }
+  function launch(position,direction){
+    reset();pose(position,direction);prev.copy(nozzle());body.visible=true;nextSample=.045;
+  }
+  function update(position,direction,dt){
+    if(!body.visible)return;
+    const before=flightTime;flightTime+=Math.max(0,dt);
+    pose(position,direction);nozzle();
+    const power=T.MathUtils.smoothstep(flightTime,.035,.095),flicker=.94+.06*Math.sin(flightTime*79.);
+    jet.visible=power>.001;jet.scale.z=power*flicker;glowMat.uniforms.power.value=power;
+    while(nextSample<flightTime){
+      sample.lerpVectors(prev,tip,(nextSample-before)/(flightTime-before));
+      append(sample,nextSample);nextSample+=interval;
+    }
+    ribbon();prev.copy(tip);
+  }
+  function end(){body.visible=false;smokeMat.uniforms.endAt.value=flightTime;}
+  function step(dt){
+    if(!body.visible&&!smoke.visible)return;
+    smokeMat.uniforms.clock.value+=dt;
+    if(!body.visible&&smokeMat.uniforms.clock.value-flightTime>=smokeLife){smoke.visible=false;geo.setDrawRange(0,0);}
+  }
+  reset();
+  return {launch,update,end,step,reset,get visible(){return body.visible||smoke.visible;}};
+}
+
+// One-on-one arcade match, with staged airframe damage and a visible descent after a knockout.
+function createFlightDuel(T,scene,coast,onEvent,jet,fx){
   const root=new T.Group(),rival=jet.flightCopy;
   root.name='空中对战';rival.name='敌机 02';root.add(rival);scene.add(root);
   const maxHP=3,maxTime=90,range=300,aimCos=Math.cos(17*Math.PI/180);
@@ -5535,7 +6126,7 @@ function createFlightDuel(T,scene,coast,onEvent,jet){
   const nose=new T.Vector3(),forward=new T.Vector3(),right=new T.Vector3(),offset=new T.Vector3();
   const playerVelocity=new T.Vector3(),rivalVelocity=new T.Vector3(),desired=new T.Vector3(),waypoint=new T.Vector3();
   const gaze=new T.Vector3(),poseMatrix=new T.Matrix4(),pose=new T.Quaternion(),bankQ=new T.Quaternion();
-  const forecast=new T.Vector3(),muzzle=new T.Vector3(),pulseEnd=new T.Vector3();
+  const forecast=new T.Vector3(),muzzle=new T.Vector3(),destination=new T.Vector3();
   const clamp=T.MathUtils.clamp, tau=2*Math.PI;
 
   // Small red wing panels and position lights identify the opposing copy of the airframe.
@@ -5552,37 +6143,50 @@ function createFlightDuel(T,scene,coast,onEvent,jet){
     const lamp=new T.Mesh(bulb,red);lamp.scale.set(1.6,.65,1.2);lamp.position.set(side*5.28,.15,1.85);rival.add(lamp);
   }
 
-  const hoop=new T.TorusGeometry(1,.075,6,32),boltCore=new T.SphereGeometry(1,8,6);
-  function pulse(color){
-    const mat=new T.MeshBasicMaterial({color,toneMapped:false,transparent:true,opacity:.94,depthWrite:false});
-    const group=new T.Group(),core=new T.Mesh(boltCore,mat),wave=new T.Mesh(hoop,mat);
-    core.scale.set(.70,.70,2.4);wave.scale.setScalar(1.95);group.add(core,wave);root.add(group);
-    return {group,start:new T.Vector3(),end:new T.Vector3(),age:0,duration:0,hit:false};
+  function missile(enemy){
+    return {enemy,visual:createDuelMissile(T,root,enemy,jet.createTrainingRound()),active:false,
+      start:new T.Vector3(),end:new T.Vector3(),position:new T.Vector3(),direction:new T.Vector3(),
+      launchAxis:new T.Vector3(),releaseVelocity:new T.Vector3(),releaseUp:new T.Vector3(),
+      age:0,duration:0,hit:false,diverted:false,rack:0};
   }
-  const outgoing=pulse(0x74f8f0),incoming=pulse(0xff5e46);
-  const flares=createDuelFlares(T,root),flareDelay=8,divertTime=.32;
-  const impact=new T.Mesh(new T.SphereGeometry(1,14,8),new T.MeshBasicMaterial({
-    color:0xffffff,wireframe:true,transparent:true,depthWrite:false,toneMapped:false
-  }));
-  root.add(impact);
+  const outgoing=missile(false),incoming=missile(true);
+  const flares=createDuelFlares(T,root),impact=createDuelImpact(T,root);
+  const wreck=createWreckMotion(T,coast),flareDelay=8,divertTime=.32;
+  const exhaustPoint=new T.Vector3(),previousPoint=new T.Vector3();
   let status,stage,elapsed,cool,playerHP,rivalHP,message,result,outcome;
-  let aligned,inRange,chargeAt,chargeEnds,evadeUntil,impactAge,impactRival;
-  let playerFlareAt,rivalFlareAt;
+  let aligned,inRange,chargeAt,chargeEnds,evadeUntil,playerFlareAt,rivalFlareAt;
+  let rivalDown=false,impactHold=0,smokeAt=0;
   function emit(kind,text){message=text;if(onEvent)onEvent(kind,text);}
-  function clearPulses(){outgoing.group.visible=incoming.group.visible=false;chargeEnds=0;}
+  function stopShots(){
+    for(const shot of [outgoing,incoming]){shot.active=false;shot.visual.end();}
+    chargeEnds=0;
+  }
+  function loadout(active){
+    for(const slot of jet.mounts){
+      slot.rangeRack.visible=!active;slot.combatStore.visible=active;slot.rivalStore.visible=true;
+    }
+  }
   function reset(){
-    root.visible=rival.visible=impact.visible=false;clearPulses();flares.reset();
-    playerFlareAt=rivalFlareAt=0;
-    status='idle';stage='chase';playerHP=rivalHP=maxHP;elapsed=cool=evadeUntil=impactAge=0;
+    root.visible=rival.visible=false;stopShots();flares.reset();impact.reset();
+    for(const shot of [outgoing,incoming]){shot.visual.reset();shot.rack=0;}
+    loadout(false);playerFlareAt=rivalFlareAt=smokeAt=impactHold=0;rivalDown=false;
+    status='idle';stage='chase';playerHP=rivalHP=maxHP;elapsed=cool=evadeUntil=0;
     aligned=inRange=false;chargeAt=6;message=result=outcome='';
   }
-  function stop(){const active=status==='active';reset();if(active)emit('end','已退出本局对战。');}
+  function stop(){
+    const inMatch=status==='active'||status==='crashing';reset();
+    if(inMatch)emit('end','已退出本局对战。');
+  }
   function airborne(s){return s&&s.position&&!s.onGround&&['free','departure','liftoff'].includes(s.phase);}
   function finish(reason){
-    if(status!=='active')return;
-    status='finished';stage='finished';aligned=inRange=false;clearPulses();flares.reset();rival.visible=false;root.visible=impact.visible;
-    outcome=reason?'retired':playerHP>rivalHP?'win':playerHP<rivalHP?'loss':'tie';
-    result=reason||(outcome==='win'?'你获胜':outcome==='loss'?'敌机 02 获胜':'平局');
+    const afterCrash=status==='crashing';
+    status='finished';stage='finished';aligned=inRange=false;stopShots();flares.reset();
+    rival.visible=false;loadout(false);
+    root.visible=impact.visible||outgoing.visual.visible||incoming.visual.visible;
+    if(!afterCrash){
+      outcome=reason?'retired':playerHP>rivalHP?'win':playerHP<rivalHP?'loss':'tie';
+      result=reason||(outcome==='win'?'你获胜':outcome==='loss'?'敌机 02 获胜':'平局');
+    }
     emit('end',result);
   }
   function axes(s){
@@ -5622,27 +6226,39 @@ function createFlightDuel(T,scene,coast,onEvent,jet){
     if(snap)rival.quaternion.copy(pose);else rival.quaternion.slerp(pose,1-Math.exp(-4*dt));
   }
   function start(s){
-    if(status==='active'||!airborne(s))return false;
-    reset();status='active';root.visible=rival.visible=true;axes(s);fly(s,0,true);aim(s);
-    emit('start','敌机 02 已入场，靠近并对准敌机，按 J 发射脉冲。');return true;
+    if(status==='active'||status==='crashing'||!airborne(s))return false;
+    reset();status='active';root.visible=rival.visible=true;loadout(true);axes(s);fly(s,0,true);aim(s);
+    emit('start','敌机 02 已入场，对准后按 J 发射导弹。');return true;
   }
-  function launch(shot,startPoint,endPoint,duration,hit){
-    shot.age=0;shot.duration=duration;shot.hit=hit;shot.diverted=false;shot.start.copy(startPoint);shot.end.copy(endPoint);
-    shot.group.position.copy(startPoint);shot.group.scale.setScalar(1);shot.group.visible=true;
-    offset.subVectors(endPoint,startPoint).normalize();
-    if(offset.lengthSq()>.5)shot.group.quaternion.setFromUnitVectors(zAxis,offset);
+  function launch(shot,s,endPoint,duration,hit){
+    const rotation=shot.enemy?rival.quaternion:s.attitudeQuaternion;
+    const position=shot.enemy?rival.position:s.position;
+    const slot=jet.mounts[shot.rack%jet.mounts.length];
+    shot.rack++;
+    // Only the currently departing store leaves its rail. The range has its own loadout.
+    for(const mount of jet.mounts)(shot.enemy?mount.rivalStore:mount.combatStore).visible=mount!==slot;
+    muzzle.copy(slot.socket.position);
+    shot.launchAxis.set(0,0,-1);shot.releaseUp.set(0,1,0);
+    if(rotation){
+      muzzle.applyQuaternion(rotation);shot.launchAxis.applyQuaternion(rotation);shot.releaseUp.applyQuaternion(rotation);
+    }
+    muzzle.add(position);
+    shot.active=true;shot.hit=hit;shot.diverted=false;shot.age=0;shot.duration=duration;
+    shot.start.copy(muzzle);shot.position.copy(muzzle);shot.direction.copy(shot.launchAxis);shot.end.copy(endPoint);
+    shot.releaseVelocity.copy(shot.enemy?rivalVelocity:playerVelocity);
+    shot.visual.launch(muzzle,shot.direction);
   }
   function divert(shot,enemy,s){
     const position=enemy?rival.position:s.position,rotation=enemy?rival.quaternion:s.attitudeQuaternion;
-    flares.burst(enemy,position,rotation,pulseEnd,divertTime);
-    launch(shot,shot.group.position,pulseEnd,divertTime,false);
-    shot.diverted=true;
+    flares.burst(enemy,position,rotation,shot.end,divertTime);
+    shot.start.copy(shot.position);shot.launchAxis.copy(shot.direction);
+    shot.age=0;shot.duration=divertTime;shot.hit=false;shot.diverted=true;
     if(enemy)rivalFlareAt=elapsed+flareDelay;
     else {playerFlareAt=elapsed+flareDelay;stage='chase';}
-    emit('evade',enemy?'敌机释放干扰弹，引开了你的脉冲。':'干扰弹已引开来袭脉冲。');
+    emit('flare',enemy?'敌机释放干扰弹，导弹偏离了目标。':'干扰弹已引开来袭导弹。');
   }
   function canFlare(){
-    return status==='active'&&incoming.group.visible&&!incoming.diverted&&elapsed>=playerFlareAt;
+    return status==='active'&&incoming.active&&!incoming.diverted&&elapsed>=playerFlareAt;
   }
   function deployFlare(s){
     if(!canFlare()||!airborne(s))return false;
@@ -5652,77 +6268,138 @@ function createFlightDuel(T,scene,coast,onEvent,jet){
     if(status!=='active'||!airborne(s)||cool>0)return false;
     axes(s);aim(s);cool=fireDelay;
     const hit=aligned&&inRange;
-    muzzle.copy(s.position).addScaledVector(nose,8);
-    if(hit)pulseEnd.copy(rival.position);
-    else pulseEnd.copy(muzzle).addScaledVector(nose,range);
-    launch(outgoing,muzzle,pulseEnd,.36,hit);
-    emit('launch',hit?'脉冲已发射。':inRange?'脉冲偏离，转向敌机再试。':'敌机超出脉冲射程。');
+    if(hit)destination.copy(rival.position);
+    else destination.copy(s.position).addScaledVector(nose,range);
+    launch(outgoing,s,destination,.62,hit);
+    emit('launch',hit?'导弹已离架。':inRange?'导弹已离架，偏离目标。':'导弹已离架，敌机超出射程。');
     return true;
   }
-  function damage(enemy,s){
+  function damage(enemy,s,shot){
     if(enemy){rivalHP--;evadeUntil=elapsed+1.9;}else playerHP--;
-    impactRival=enemy;impactAge=0;impact.visible=true;impact.scale.setScalar(4);
-    impact.material.color.setHex(enemy?0x6cfff2:0xff6b50);impact.material.opacity=.86;
-    impact.position.copy(enemy?rival.position:s.position);
-    emit('score',enemy?'命中敌机，敌方护盾剩余 '+rivalHP+' 格。':'我机中弹，护盾剩余 '+playerHP+' 格。');
-    if(playerHP===0||rivalHP===0)finish('');
+    const hp=enemy?rivalHP:playerHP,position=enemy?rival.position:s.position;
+    const rotation=enemy?rival.quaternion:s.attitudeQuaternion,velocity=enemy?rivalVelocity:playerVelocity;
+    impact.burst(enemy,position,rotation,shot.start,velocity);
+    smokeAt=0;
+    if(hp>0){
+      emit('score',(enemy?'命中敌机，':'我机中弹，')+(hp===1?'机体重损，开始冒浓烟。':'机身受损。'));
+      return;
+    }
+    status='crashing';stage='falling';rivalDown=enemy;aligned=inRange=false;
+    stopShots();outcome=enemy?'win':'loss';result=enemy?'敌机已被击落，你获胜':'我机被击落，敌机 02 获胜';
+    if(enemy)wreck.start(rotation,velocity);
+    else{
+      // The surviving aircraft continues its flyby while the player falls.
+      rivalVelocity.set(0,0,-1).applyQuaternion(rival.quaternion).multiplyScalar(Math.max(36,rivalVelocity.length()));
+      rivalVelocity.y=Math.max(3,rivalVelocity.y);
+    }
+    fx.burst(position,'knockout',s.windX,s.windZ,velocity);
+    emit(enemy?'rivalDown':'playerDown',enemy?'敌机起火失控，正在坠落。':'我机起火失控，正在坠落。');
   }
-  function stepPulse(shot,s,dt){
-    if(!shot.group.visible)return;
+  function stepMissile(shot,s,dt){
+    if(!shot.active)return;
     shot.age+=dt;const t=Math.min(1,shot.age/shot.duration);
     if(shot===outgoing&&shot.hit)shot.end.copy(rival.position);
-    shot.group.position.lerpVectors(shot.start,shot.end,t);
-    shot.group.scale.setScalar(1+.6*t);
-    if(shot===outgoing&&shot.hit&&t>=.65&&elapsed>=rivalFlareAt){
-      divert(shot,true,s);return;
+    previousPoint.copy(shot.position);
+    if(shot.diverted){
+      // Ease out along the old trail before the smoke bends towards the flare.
+      offset.copy(shot.start).addScaledVector(shot.launchAxis,Math.min(15,.35*shot.start.distanceTo(shot.end)));
+      shot.position.copy(shot.start).lerp(offset,t);
+      offset.lerp(shot.end,t);shot.position.lerp(offset,t);
+    }else{
+      // A short release beat keeps the departing store in view beneath the wing before ignition.
+      const release=.085;
+      const drop=Math.min(shot.age,release);
+      shot.position.copy(shot.start).addScaledVector(shot.releaseVelocity,drop)
+        .addScaledVector(shot.releaseUp,-.75*drop/release).addScaledVector(shot.launchAxis,.5*drop/release);
+      if(shot.age>release){
+        const travel=Math.min(1,(shot.age-release)/(shot.duration-release));
+        shot.position.lerp(shot.end,travel*(.38+.62*travel));
+      }
     }
+    if(shot.diverted||shot.age>.085){
+      offset.subVectors(shot.position,previousPoint);
+      if(offset.lengthSq()>1e-6)shot.direction.copy(offset).normalize();
+    }
+    shot.visual.update(shot.position,shot.direction,dt);
+    if(shot===outgoing&&shot.hit&&t>=.65&&elapsed>=rivalFlareAt){divert(shot,true,s);return;}
     if(t<1)return;
-    shot.group.visible=false;
+    shot.active=false;shot.visual.end();
     if(shot.diverted)return;
-    if(shot===outgoing){if(shot.hit)damage(true,s);}
+    if(shot===outgoing){if(shot.hit)damage(true,s,shot);}
     else{
       stage='chase';
-      if(s.position.distanceToSquared(shot.end)<=11*11)damage(false,s);
-      else emit('evade','成功避开来袭脉冲。');
+      if(s.position.distanceToSquared(shot.end)<=11*11)damage(false,s,shot);
+      else emit('evade','已避开来袭导弹。');
     }
   }
-  function stepImpact(s,dt){
-    if(!impact.visible)return;
-    impactAge+=dt;
-    if(impactAge>.55){impact.visible=false;if(status==='finished')root.visible=false;return;}
-    if(status==='active')impact.position.copy(impactRival?rival.position:s.position);
-    impact.scale.setScalar(4+impactAge*20);impact.material.opacity=.86*(1-impactAge/.55);
+  function smoke(position,rotation,burning,s){
+    exhaustPoint.set(1.25,.30,3.1);
+    if(rotation)exhaustPoint.applyQuaternion(rotation);
+    fx.trail(exhaustPoint.add(position),s.windX,s.windZ,burning);
+  }
+  function stepVisuals(s,dt){
+    outgoing.visual.step(dt);incoming.visual.step(dt);flares.step(dt);
+    impact.step(dt,s.position,rival.position);
+    smokeAt-=dt;
+    if(smokeAt<=0){
+      smokeAt=.065;
+      if(rival.visible&&rivalHP<maxHP&&stage!=='impact')smoke(rival.position,rival.quaternion,rivalHP<=1,s);
+      if(playerHP>0&&playerHP<maxHP&&airborne(s)&&status==='active')smoke(s.position,s.attitudeQuaternion,playerHP<=1,s);
+    }
+  }
+  function stepWreck(s,dt){
+    if(stage==='impact'){
+      impactHold-=dt;if(impactHold<=0)finish('');
+      return;
+    }
+    let contact='';
+    if(rivalDown){
+      contact=wreck.step(rival.position,rival.quaternion,dt);
+      if(contact){
+        rival.visible=false;
+        fx.burst(rival.position,contact,s.windX,s.windZ);
+        emit(contact==='water'?'splash':'groundImpact',contact==='water'?'敌机已坠海。':'敌机撞地爆炸。');
+      }
+    }else{
+      rival.position.addScaledVector(rivalVelocity,dt);
+      rival.position.y=Math.max(rival.position.y,coast.groundHeight(rival.position.x,rival.position.z)+8);
+      if(s.phase==='crashed')contact='crash';
+    }
+    if(contact){stage='impact';impactHold=.95;}
   }
   function advance(s,dt){
     elapsed=Math.min(maxTime,elapsed+dt);cool=Math.max(0,cool-dt);
-    axes(s);fly(s,dt,false);aim(s);stepImpact(s,dt);flares.step(dt);
+    axes(s);fly(s,dt,false);aim(s);
     if(elapsed>=chargeAt){
       chargeAt+=period;
       if(inRange){
         stage='attack';chargeEnds=elapsed+windup;
-        // The warning freezes one spot in the game's moving airspace. The player
-        // can leave it before the red pulse arrives, including while hovering.
         forecast.copy(s.position).addScaledVector(playerVelocity,windup+inboundFlight);
-        emit('cue','敌机正在蓄能。准备按 U 释放干扰弹，也可转弯躲避。');
+        emit('cue','敌机准备发射导弹。');
       }
     }
     if(chargeEnds&&elapsed>=chargeEnds){
-      chargeEnds=0;launch(incoming,rival.position,forecast,inboundFlight,false);
-      emit('incoming','敌方脉冲来袭。');
+      chargeEnds=0;launch(incoming,s,forecast,inboundFlight,false);
+      emit('incoming','来袭导弹！可按 U 释放干扰弹。');
     }
-    stepPulse(outgoing,s,dt);
-    if(status==='active')stepPulse(incoming,s,dt);
+    stepMissile(outgoing,s,dt);
+    if(status==='active')stepMissile(incoming,s,dt);
     if(status==='active'&&elapsed>=maxTime)finish('');
   }
   function step(s,dt){
     if(!Number.isFinite(dt)||dt<=0||status==='idle')return;
-    if(status==='finished'){stepImpact(s,dt);return;}
-    if(!airborne(s)){
-      impact.visible=false;finish(s&&s.phase==='return'?'已返航，对战结束':'飞行中断，对战结束');return;
+    if(status==='active'&&!airborne(s)){
+      impact.reset();finish(s&&s.phase==='return'?'已返航，对战结束':'飞行中断，对战结束');return;
     }
-    // Preserve the warning and pulse windows when frames are skipped.
-    for(let remaining=dt;remaining>1e-7&&status==='active';){
-      const slice=Math.min(remaining,.05);advance(s,slice);remaining-=slice;
+    for(let remaining=dt;s&&remaining>1e-7;){
+      const slice=Math.min(remaining,.05);remaining-=slice;
+      stepVisuals(s,slice);
+      if(status==='active')advance(s,slice);
+      else if(status==='crashing')stepWreck(s,slice);
+      else{
+        root.visible=impact.visible||outgoing.visual.visible||incoming.visual.visible;
+        if(!root.visible)break;
+      }
     }
   }
   reset();
@@ -5869,9 +6546,28 @@ function createFlightObserver(T, coast){
   quad.frustumCulled=false;screen.add(quad);
   const pos=new T.Vector3(),aim=new T.Vector3(),forward=new T.Vector3(),right=new T.Vector3(),worldUp=new T.Vector3(0,1,0);
   const oldViewport=new T.Vector4(),oldScissor=new T.Vector4();
-  let lastMode="",lastTime=-Infinity;
-  function reset(){lastMode="";lastTime=-Infinity;}
-  function render(renderer,scene,jet,s,rival,mode,rect){
+  const wreckOffsets=[[-23,16,21],[23,16,21],[-23,19,-21],[23,19,-21],[1,42,8]];
+  const sightline=new T.Vector3();
+  let lastMode="",lastTime=-Infinity,wreckView=0;
+  function reset(){lastMode="";lastTime=-Infinity;wreckView=0;}
+  function frameWreck(){
+    aim.y+=1.5;
+    // Keep the same side of the action until terrain or the carrier blocks the view.
+    for(let attempt=0;attempt<wreckOffsets.length;attempt++){
+      pos.fromArray(wreckOffsets[wreckView]).add(aim);
+      pos.y=Math.max(pos.y,coast.groundHeight(pos.x,pos.z)+3);
+      let clear=true;
+      for(let i=1;i<=10;i++){
+        sightline.lerpVectors(aim,pos,i/10);
+        const {x,y,z}=sightline;
+        if(y<coast.groundHeight(x,z)+.8||coast.obstacleAt(x,y,z,1.4)){clear=false;break;}
+      }
+      if(clear||attempt===wreckOffsets.length-1)break;
+      wreckView=(wreckView+1)%wreckOffsets.length;
+    }
+    eye.fov=48;
+  }
+  function render(renderer,scene,jet,s,rival,mode,rect,crashing=false){
     if(rect.w<2||rect.h<2)return;
     const aspect=rect.w/rect.h;
     const w=Math.min(352,Math.max(144,Math.round(rect.w/16)*16)),h=Math.max(70,Math.round(w/aspect));
@@ -5888,6 +6584,9 @@ function createFlightObserver(T, coast){
           pos.set(12.8,12.5,-13.4);
           const distance=pos.distanceTo(aim);
           eye.fov=T.MathUtils.clamp(T.MathUtils.radToDeg(2*Math.atan2(15,Math.max(8,distance))),.45,58);
+        }else if(crashing){
+          // A level camera holds the tumbling airframe and its impact in the inset.
+          frameWreck();
         }else{
           forward.set(0,0,-1).applyQuaternion(subject.quaternion);
           right.crossVectors(forward,worldUp);
@@ -5931,6 +6630,8 @@ function createFlightObserver(T, coast){
   let sim, state, effects, range, pfd, cockpit, visor, wingTrails;
   let comms,duel,radar,observer,mission="duel",duelQueued=false;
   let observerMode="",beforeDuelView="",restoreDuelView=false,observerRect={x:0,y:0,w:0,h:0};
+  let wreckSmokeAt=0;
+  const wreckOutlet=new T.Vector3();
   const observerLabels={tower:"舰桥机位",wing:"伴飞机位",rival:"对手机位"};
   let headYaw=0,headPitch=-.06,rangeNote="",rangeFeedback="",noteExpires=0;
   const headRotation=new T.Quaternion(),headAngles=new T.Euler(0,0,0,"YXZ");
@@ -6001,7 +6702,7 @@ function createFlightObserver(T, coast){
   }
   function reset(){
     resetInput();sim.reset();effects.reset();range.reset();wingTrails.reset();cockpit.reset();jet.root.visible=true;
-    mission="duel";duelQueued=false;duel.reset();beforeDuelView="";restoreDuelView=false;setObserver("");comms.reset();
+    mission="duel";duelQueued=false;duel.reset();wreckSmokeAt=0;beforeDuelView="";restoreDuelView=false;setObserver("");comms.reset();
     rangeNote=rangeFeedback="";noteExpires=0;
     tripStarted=false;gateIndex=0;positionGate();selectCamera(0);cameraReady=false;lastShadowPose=NaN;
     hud.radio("驻车制动已接合，发动机关闭。可启动滑行，或直接选择起飞方式。");refreshHUD();
@@ -6033,6 +6734,7 @@ function createFlightObserver(T, coast){
     }
   }
   function primaryAction(){
+    if(duel.status==="crashing"&&state.shotDown)return;
     if(state.phase==="crashed"){reset();return;}
     if(state.phase==="roll"){sim.brake();return;}
     if(state.onGround){sim.launch("roll");return;}
@@ -6054,7 +6756,7 @@ function createFlightObserver(T, coast){
     rangeNote=rangeFeedback="";noteExpires=0;refreshHUD();
   }
   function fire(){
-    if(state.phase==="crashed")return;
+    if(state.phase==="crashed"||state.phase==="falling"||duel.status==="crashing")return;
     if(mission==="duel"){
       if(duelQueued||state.phase==="return"||state.phase==="falling")return;
       if(duel.status==="active")duel.fire(state);
@@ -6077,6 +6779,10 @@ function createFlightObserver(T, coast){
   function duelEvent(kind,msg){
     if(kind==="start"){
       beforeDuelView=observerMode;restoreDuelView=true;duelQueued=false;setObserver("rival");
+    }else if(kind==="playerDown"){
+      sim.shootDown();
+      if(cameraIndex===3)selectCamera(0);
+      if(observerMode==="rival")setObserver("wing");
     }else if(kind==="end"&&restoreDuelView){
       restoreDuelView=false;setObserver(beforeDuelView);
     }else if(kind==="end"&&observerMode==="rival"){
@@ -6084,9 +6790,13 @@ function createFlightObserver(T, coast){
     }
     hud.radio(msg);
     if(kind==="score")audio.cue("hit");
-    else if(kind==="launch")audio.cue("launch");
+    else if(kind==="launch"||kind==="incoming")audio.cue("missile");
+    else if(kind==="flare")audio.cue("flare");
+    else if(kind==="playerDown"||kind==="rivalDown")audio.cue("knockout");
+    else if(kind==="splash")audio.cue("water");
+    else if(kind==="groundImpact")audio.cue("crash");
     else if(kind==="evade"||kind==="cue")audio.cue("gate");
-    else if(kind==="start"||kind==="end")audio.cue("mode");
+    else if(kind==="start"||(kind==="end"&&duel.playerHP>0&&duel.rivalHP>0))audio.cue("mode");
   }
   function selectMissionAction(){
     if(mission==="range"){pickTarget();return;}
@@ -6259,7 +6969,7 @@ function createFlightObserver(T, coast){
     jet.root.quaternion.copy(state.attitudeQuaternion);
     jet.update(state);jet.root.updateMatrixWorld(true);
     exhaust.update(state);wingTrails.update(state,jet.root,dt);groundLight.update(state);coast.update(state);updateCameras(dt);
-    route.visible=duel.status!=="active"&&tripStarted && ["free","departure"].includes(state.phase) && state.mode==="cruise" && gateIndex<gates.length;
+    route.visible=duel.status!=="active"&&duel.status!=="crashing"&&tripStarted && ["free","departure"].includes(state.phase) && state.mode==="cruise" && gateIndex<gates.length;
     renderer.setScissorTest(false);renderer.setViewport(0,0,viewW,viewH);scene.background=clearSky;
     // Keep the deck shadow static until some part of the parked silhouette actually moves.
     const parkedPose=state.nozzle+state.gear*2+state.flap*3+range.ammo*4;
@@ -6278,7 +6988,7 @@ function createFlightObserver(T, coast){
       renderer.render(scene,monitorCam);exhaust.render(renderer,monitorCam);
       renderer.setScissorTest(false);renderer.setViewport(0,0,viewW,viewH);scene.background=clearSky;
     }else if(!$("observerPanel").hidden){
-      observer.render(renderer,scene,jet,state,duel.rival,observerMode,observerRect);
+      observer.render(renderer,scene,jet,state,duel.rival,observerMode,observerRect,duel.status==="crashing");
     }else if(!$("flightDisplay").hidden)pfd.draw(state);
     hud.heading(state.displayHeading);updatePointer();updateTargetMarker();
   }
@@ -6295,6 +7005,7 @@ function createFlightObserver(T, coast){
     mark.style.left=(50+50*routeProjection.x)+"%";mark.style.top=(50-50*routeProjection.y)+"%";
     const match=mission==="duel";
     mark.classList.toggle("enemy",match);
+    mark.classList.toggle("label-left",(1-routeProjection.x)*.5*viewW<112);
     mark.classList.toggle("aligned",match&&duel.inRange&&duel.aligned);
     const label=match?(duel.inRange&&duel.aligned?"已对准 · ":"")+"敌机 02":target.name;
     if(mark.lastElementChild.textContent!==label)mark.lastElementChild.textContent=label;
@@ -6319,56 +7030,67 @@ function createFlightObserver(T, coast){
     pointer.lastElementChild.textContent=Math.round(dist)+" m";pointer.hidden=false;
   }
   function updateTrainingHud(ground,crashed){
-    const match=mission==="duel",active=duel.status==="active",finished=duel.status==="finished";
+    const match=mission==="duel",active=duel.status==="active",crashing=duel.status==="crashing",finished=duel.status==="finished";
     $("duelTab").setAttribute("aria-pressed",String(match));$("practiceTab").setAttribute("aria-pressed",String(!match));
     const card=$("rangeControls");card.dataset.mission=mission;
     radar.update(state,match,active?duel.rival:null);
+    stage.classList.toggle("wreck-view",crashing);
     $("target").hidden=match&&!active&&!duelQueued;
-    $("shields").hidden=!match||(!active&&!finished);
+    $("aircraftCondition").hidden=!match||(!active&&!crashing&&!finished);
     $("flare").hidden=!match||!active;
     $("ammo").hidden=match;
     if(match){
-      const seconds=finished?Math.round(duel.maxTime-duel.timeLeft):Math.ceil(duel.timeLeft);
+      const decided=crashing||finished;
+      const seconds=decided?Math.round(duel.maxTime-duel.timeLeft):Math.ceil(duel.timeLeft);
       const clock=Math.floor(seconds/60)+":"+String(seconds%60).padStart(2,"0");
-      hud.write("scoreLabel",finished?"用时":active?"剩余":"限时");hud.write("hits",clock);
+      hud.write("scoreLabel",decided?"用时":active?"剩余":"限时");hud.write("hits",clock);
       hud.write("targetValue",finished?duel.result:"F-35B · 敌机 02");
       hud.write("targetAction",active?"退出":"取消");$("target").disabled=false;
       $("target").title=active?"退出本局对战":"取消离舰后的对战";
-      $("ownShield").value=duel.playerHP;$("enemyShield").value=duel.rivalHP;
-      const unavailable=crashed||["falling","return"].includes(state.phase);
-      const action=active?(duel.readyToFire?"发射脉冲":"充能 "+duel.cooldown.toFixed(1)+" 秒"):
-        duelQueued?"等待离舰":ground?"起飞对战":finished?"再来一局":"开始对战";
+      const condition=[crashing&&duel.stage==="falling"?"失控":"坠毁","重损","受损","完好"];
+      for(const [id,hp] of [["ownCondition",duel.playerHP],["enemyCondition",duel.rivalHP]]){
+        const node=$(id);
+        if(node.textContent!==condition[hp])node.textContent=condition[hp];
+        if(node.dataset.hp!==String(hp))node.dataset.hp=String(hp);
+      }
+      const unavailable=crashing||crashed||["falling","return"].includes(state.phase);
+      const action=active?(duel.readyToFire?"发射导弹":"待发 "+duel.cooldown.toFixed(1)+" 秒"):
+        crashing?(duel.playerHP===0?"我机":"敌机")+(duel.stage==="falling"?"坠落中":"已坠毁"):
+        crashed?"本局结束":duelQueued?"等待离舰":ground?"起飞对战":finished?"再来一局":"开始对战";
       hud.write("actionLabel",action);
       $("fire").disabled=unavailable||duelQueued||(active&&!duel.readyToFire);
-      $("fire").title=active?"朝机头方向发射脉冲（J）":"开始一对一空战（J）";
-      hud.buttonIcon($("fire"),active?"target":ground?"takeoff":"play");
+      $("fire").title=active?"发射导弹（J）":crashing||crashed?action:"开始一对一空战（J）";
+      $("fire").querySelector("kbd").hidden=crashing||crashed;
+      hud.buttonIcon($("fire"),active?"launch":ground?"takeoff":"play");
       if(active){
         $("flare").disabled=!duel.canFlare;
         const cooldown=Math.ceil(duel.flareCooldown),label=$("flareLabel");
         const text=cooldown?"干扰弹 · "+cooldown+" 秒":duel.canFlare?"释放干扰弹":"干扰弹待命";
         if(label.textContent!==text)label.textContent=text;
       }
-      const hint=active?(duel.canFlare?"脉冲来袭！按 U 或点「释放干扰弹」。":duel.message):unavailable?(crashed?"重新上舰后可再次对战。":"恢复自由飞行后可开始对战。"):
-        finished?"本局护盾　我方 "+duel.playerHP+" / 敌机 "+duel.rivalHP:
-        duelQueued?"离舰后敌机入场。":"一对一空战，先击破敌机的三格护盾获胜。";
+      const hint=active?(duel.canFlare?"导弹来袭！按 U 或点「释放干扰弹」。":duel.message):crashing?duel.message:
+        unavailable?(crashed?"重新上舰后可再次对战。":"恢复自由飞行后可开始对战。"):
+        finished?"本局结束，可开始下一局。":duelQueued?"离舰后敌机入场。":"三次命中可击落敌机。";
       hud.write("rangeHint",hint);
-      card.dataset.feedback=active?(duel.stage==="attack"?"incoming":duel.readyToFire&&duel.inRange&&duel.aligned?"ready":""):finished?duel.outcome:"";
+      card.dataset.feedback=active?(duel.stage==="attack"?"incoming":duel.readyToFire&&duel.inRange&&duel.aligned?"ready":""):decided?duel.outcome:"";
       return;
     }
-    const complete=range.hits===range.total,newRound=ground&&complete,air=!ground&&!crashed;
+    $("fire").querySelector("kbd").hidden=false;
+    const complete=range.hits===range.total,newRound=ground&&complete,air=!ground&&!crashed&&state.phase!=="falling";
     hud.write("scoreLabel","命中");hud.write("actionLabel","发射训练弹");hud.buttonIcon($("fire"),"launch");
     hud.write("targetValue",range.selected?.name||(complete?"本轮完成":"训练弹在途"));
     hud.write("targetAction",newRound?"重新布靶":"换靶");hud.write("ammo",String(range.ammo));hud.write("hits",range.hits+"/"+range.total);
     $("fire").disabled=!air||range.ammo===0||!range.selected;$("target").disabled=crashed||(!range.selected&&!newRound);
     $("fire").title="向选中的练习靶发射（J）";$("target").title="选择下一练习靶（T）";
     const recent=air&&!!rangeNote&&state.time<noteExpires;
-    const hint=crashed?"本次试飞已结束":recent?rangeNote:complete?(ground?"可重新布置岛上靶":"全靶命中，返舰可开始下一轮"):ground?"离舰后即可发射":range.inFlight?"训练弹飞行中":"已选中岛上靶，点发射即可";
+    const hint=crashed?"本次试飞已结束":state.phase==="falling"?"飞机正在坠落":recent?rangeNote:complete?(ground?"可重新布置岛上靶":"全靶命中，返舰可开始下一轮"):ground?"离舰后即可发射":range.inFlight?"训练弹飞行中":"已选中岛上靶，点发射即可";
     hud.write("rangeHint",hint);card.dataset.feedback=recent?rangeFeedback:complete?"hit":"";
   }
   function refreshHUD(){
     const phase=state.phase,ground=state.onGround,crashed=phase==="crashed",returning=phase==="return";
     const air=!ground&&!crashed, p=state.position, takingOff=phase==="liftoff"&&ground;
-    const labels={parked:"甲板待命",taxi:"甲板滑行",roll:"甲板滑跑",departure:"离舰爬升",liftoff:"垂直起飞",return:"自动返舰",falling:"脱离甲板",crashed:"试飞结束"};
+    const shotDown=state.shotDown,ending=duel.status==="crashing";
+    const labels={parked:"甲板待命",taxi:"甲板滑行",roll:"甲板滑跑",departure:"离舰爬升",liftoff:"垂直起飞",return:"自动返舰",falling:shotDown?"失控坠落":"脱离甲板",crashed:shotDown?"已坠毁":"试飞结束"};
     app.dataset.phase=phase;app.classList.toggle("airborne",air);
     hud.write("mode",state.maneuver==="loop"?"垂直筋斗":state.maneuver==="roll"?"横滚机动":labels[phase]||(state.mode==="hover"?"悬停飞行":state.manualActive?"手动飞行":"巡航平飞"));
     const direct=manualLayout(),assist=$("assist");
@@ -6390,7 +7112,7 @@ function createFlightObserver(T, coast){
     hud.write("fuel",Math.round(state.fuel)+"%");
     hud.write("flapValue",(state.flapAuto?"自动 ":"")+Math.round(state.flap*39)+"°");
     hud.write("gearValue",state.gear>.97?"放下":state.gear<.03?"收起":"作动中");
-    hud.write("engineValue",phase==="parked"||crashed?"关闭":state.engine<.98?"启动中":"运转");
+    hud.write("engineValue",shotDown?"熄火":phase==="parked"||crashed?"关闭":state.engine<.98?"启动中":"运转");
     const engineLabel=phase==="parked"?"启动滑行":phase==="roll"||(phase==="taxi"&&state.speed>.5)?"甲板制动":phase==="taxi"?"关闭引擎":"发动机";
     hud.write("engineActionLabel",engineLabel);$("engine").title=engineLabel+(engineLabel==="甲板制动"?"（B）":"（E）");
     $("engine").disabled=!ground||takingOff;$("gear").disabled=ground||crashed;$("flaps").disabled=crashed;
@@ -6407,18 +7129,22 @@ function createFlightObserver(T, coast){
     $("boost").setAttribute("aria-pressed",String(Boolean(state.boostCommand)));
     updateTrainingHud(ground,crashed);$("observerToggle").disabled=crashed;
     hud.updateMeters(state.nozzle,state.thrust);
-    primary.disabled=takingOff||phase==="falling";
-    hud.write("primaryLabel",crashed?"重新上舰":phase==="roll"?"中止滑跑":takingOff?"垂直离舰中":ground?"滑跑起飞":returning?"接管悬停":state.mode==="hover"?"转换平飞":"切换悬停");
+    primary.disabled=takingOff||phase==="falling"||(ending&&crashed);
+    hud.write("primaryLabel",crashed?(ending?"已坠毁":"重新上舰"):shotDown?"机体失控":phase==="roll"?"中止滑跑":takingOff?"垂直离舰中":ground?"滑跑起飞":returning?"接管悬停":state.mode==="hover"?"转换平飞":"切换悬停");
     hud.write("primaryKey",crashed?"R":phase==="roll"?"B":ground?"SPACE":"V");
+    $("primaryKey").hidden=shotDown&&(phase==="falling"||ending);
     hud.buttonIcon(primary,ground?"takeoff":state.mode==="cruise"?"hover":"cruise");
     secondary.hidden=crashed||returning||phase==="falling"||phase==="roll"||takingOff;
     const secondaryText=ground?"垂直起飞":"返舰着陆";
     if(secondary.lastElementChild.textContent!==secondaryText)secondary.lastElementChild.textContent=secondaryText;
     secondary.title=ground?"垂直起飞（V）":"自动返舰着陆（L）";hud.buttonIcon(secondary,ground?"vector":"land");
     updatePanels();
-    $("incident").hidden=!crashed;
-    if(crashed){hud.write("incidentTitle",state.crashReason);hud.write("incidentScore","航标 "+gateIndex+"/3 · 靶场命中 "+range.hits+"/"+range.total);}
-    const activeRoute=duel.status!=="active"&&air&&["free","departure"].includes(phase)&&state.mode==="cruise";
+    $("incident").hidden=!crashed||ending;
+    if(crashed&&!ending){
+      hud.write("incidentTitle",state.crashReason);
+      hud.write("incidentScore",shotDown&&duel.result?duel.result:"航标 "+gateIndex+"/3 · 靶场命中 "+range.hits+"/"+range.total);
+    }
+    const activeRoute=duel.status!=="active"&&!ending&&air&&["free","departure"].includes(phase)&&state.mode==="cruise";
     $("routeInfo").hidden=!activeRoute;
     if(activeRoute) {
       hud.write("routeLabel",gateIndex<gates.length?"航标 "+String(gateIndex+1).padStart(2,"0")+" / 03":"航线已完成");
@@ -6438,6 +7164,10 @@ function createFlightObserver(T, coast){
       sim.step(step,input);range.step(state,step);checkGate(x,y,z);
       if(duelQueued&&!state.onGround&&["free","departure","liftoff"].includes(state.phase)&&state.agl>3)duel.start(state);
       duel.step(state,step);
+      if(state.shotDown&&state.phase==="falling"&&state.time>=wreckSmokeAt){
+        wreckOutlet.set(1.25,.30,3.1).applyQuaternion(state.attitudeQuaternion).add(state.position);
+        effects.trail(wreckOutlet,state.windX,state.windZ);wreckSmokeAt=state.time+.065;
+      }
       effects.update(step,state.windX,state.windZ);
     }
     state.dt=dt;audio.update(state);comms.step(dt);draw(dt);
@@ -6513,7 +7243,7 @@ function createFlightObserver(T, coast){
         const actions={KeyV:()=>sim.changeMode(),KeyL:requestReturn,KeyC:cycleCamera,KeyO:toggleObserver,Digit1:toggleCockpit,Numpad1:toggleCockpit,
           KeyQ:()=>flyManeuver("roll"),KeyK:()=>flyManeuver("loop"),KeyX:boost,KeyM:toggleAssist,
           KeyB:()=>{pressed.add("KeyB");sim.brake();},KeyE:engineAction,KeyF:()=>sim.flap(),KeyG:()=>sim.gear(),
-          KeyN:()=>sim.testNozzle(),KeyJ:fire,KeyU:deployFlare,KeyT:()=>{if(mission==="range")pickTarget();else if(duel.status==="active")setObserver("rival");},KeyR:()=>{if(state.phase==="crashed")reset();},
+          KeyN:()=>sim.testNozzle(),KeyJ:fire,KeyU:deployFlare,KeyT:()=>{if(mission==="range")pickTarget();else if(duel.status==="active")setObserver("rival");},KeyR:()=>{if(state.phase==="crashed"&&duel.status!=="crashing")reset();},
           KeyH:()=>openModal("help"),Slash:()=>openModal("help"),KeyP:()=>openModal("pause"),Escape:()=>openModal("pause")};
         if(actions[key]){e.preventDefault();actions[key]();}
       }
@@ -6591,7 +7321,7 @@ function createFlightObserver(T, coast){
     exhaust=createExhaust(T,jet.nozzleExit);groundLight=createGroundLight(T,scene,coast);
     sim=createFlightSimulator(T,coast,flightEvent);state=sim.state;effects=createRangeEffects(T,scene);
     range=createTrainingRange(T,scene,coast,jet,effects,notify);pfd=createPilotDisplay($("pfd"));
-    duel=createFlightDuel(T,scene,coast,duelEvent,jet);radar=createDuelRadar(stage);observer=createFlightObserver(T,coast);
+    duel=createFlightDuel(T,scene,coast,duelEvent,jet,effects);radar=createDuelRadar(stage);observer=createFlightObserver(T,coast);
     comms=createTowerConsole(state,sim.home,()=>sim.returnHome(),toggleSound,()=>canvas.focus({preventScroll:true}));
     cockpit=createFlightCockpit(T,scene.environment,coast.sunDirection);visor=createFlightVisor($("visor"),T);wingTrails=createWingTrails(T,scene);
     jet.root.traverse(o=>o.layers.enable(1));scene.traverse(o=>{if(o.isLight)o.layers.enable(1);});

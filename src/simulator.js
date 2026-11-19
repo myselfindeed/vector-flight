@@ -14,6 +14,7 @@ function createFlightSimulator(T, coast, event) {
   const rates=new T.Vector3(), rotationStep=new T.Vector3(), nose=new T.Vector3(), rightWing=new T.Vector3();
   const s={position:p,attitudeQuaternion:attitude,renderer:null,time:0,phase:"parked",mode:"cruise"};
   const controls={turn:0,forward:0,lift:0,pitch:0,yaw:0,brake:false};
+  const wreck=createWreckMotion(T,coast);
   const takeover={turn:0,pitch:0,yaw:0},attitudeInputs=["turn","pitch","yaw"],rotationAxes=["x","y","z"];
   const lastVelocity=new T.Vector3(), acceleration=new T.Vector3(), liftAxis=new T.Vector3();
   const fullTurn=2*Math.PI, maneuverNames={roll:"横滚",loop:"筋斗"};
@@ -26,7 +27,7 @@ function createFlightSimulator(T, coast, event) {
       engine:0,thrust:0,agl:0,msl:-coast.seaLevel,airspeed:0,speed:0,vx:0,vy:0,vz:0,onGround:true,
       windX:4,windZ:-2,windSpeed:4.47,humidity:.80,fuel:100,flapAuto:true,gearAuto:true,crashReason:"",landings:0,
       loadFactor:1,maneuver:"",maneuverQueued:"",maneuverProgress:0,boost:0,boostCommand:false,
-      assistEnabled:false,manualActive:false,pitchInput:0,yawInput:0,
+      assistEnabled:false,manualActive:false,pitchInput:0,yawInput:0,shotDown:false,
       displayPitch:0,displayRoll:0,displayHeading:0});
     attitude.identity();rates.set(0,0,0);
     Object.assign(controls,{turn:0,forward:0,lift:0,pitch:0,yaw:0,brake:false});
@@ -72,6 +73,12 @@ function createFlightSimulator(T, coast, event) {
     s.phase="crashed";s.crashReason=reason;s.onGround=false;s.engine=s.thrust=s.airspeed=s.speed=0;
     s.agl=Math.max(0,p.y-coast.groundHeight(p.x,p.z)-wheel);s.msl=p.y-wheel-coast.seaLevel;
     s.vx=s.vy=s.vz=0;forward=0;event(kind,reason);
+  }
+  function shootDown(){
+    if(s.onGround||!['liftoff','departure','free'].includes(s.phase))return;
+    clearManeuver();s.boostCommand=false;s.boost=0;s.manualActive=false;
+    s.shotDown=true;s.phase='falling';s.engine=s.thrust=0;
+    wreck.start(attitude,lastVelocity.set(s.vx,s.vy,s.vz));
   }
   function changeMode(){
     if(s.phase==="parked"||s.phase==="taxi"){launch("vertical");return;}
@@ -387,6 +394,16 @@ function createFlightSimulator(T, coast, event) {
     s.pitchInput=u.pitch;s.yawInput=u.yaw;
     s.time+=dt;wind();old.copy(p);lastVelocity.set(s.vx,s.vy,s.vz);
     if(s.phase==="crashed")return;
+    if(s.shotDown){
+      const contact=wreck.step(p,attitude,dt);
+      readPose(false);
+      s.vx=wreck.velocity.x;s.vy=wreck.velocity.y;s.vz=wreck.velocity.z;
+      updateFlightReadings(dt);
+      s.agl=Math.max(0,p.y-coast.groundHeight(p.x,p.z)-wheel);s.msl=p.y-wheel-coast.seaLevel;
+      s.speed=Math.hypot(s.vx,s.vz);s.airspeed=Math.hypot(s.vx-s.windX,s.vy,s.vz-s.windZ);
+      if(contact)crash(contact==='water'?'我机被击落，已坠海':'我机被击落，机体坠毁',contact);
+      return;
+    }
     if(s.phase==="parked"){
       s.onGround=true;s.nozzle=move(s.nozzle,bench?vertical:0,dt*.8);s.thrust=s.engine=s.speed=s.airspeed=0;
       s.turn=0;s.flap=move(s.flap,flapChoice<0?0:flapChoice*.5,dt*.60);return;
@@ -408,5 +425,5 @@ function createFlightSimulator(T, coast, event) {
     s.flapAuto=flapChoice<0;s.gearAuto=gearChoice<0;
   }
   reset();
-  return {state:s,home,reset,step,startEngine,launch,changeMode,returnHome,brake,flap,gear,testNozzle,crash,maneuver,toggleBoost,toggleAssist};
+  return {state:s,home,reset,step,startEngine,launch,changeMode,returnHome,brake,flap,gear,testNozzle,crash,shootDown,maneuver,toggleBoost,toggleAssist};
 }

@@ -1,84 +1,164 @@
-// Six sparks fan out behind the aircraft. Each point samples a short stretch of its trail.
+// Each flare paints a short incandescent ribbon, leaving drifting smoke as it cools.
 function createDuelFlares(T,root){
-  const duration=1.15,geometry=new T.BufferGeometry();
-  const origins=[],velocities=[],lags=[];
-  let lureHead=0;
+  const burnTime=1.25,smokeLife=.78,duration=burnTime+smokeLife+.14;
+  const pointOrigins=[],pointVelocities=[],emissions=[];
+  const trailOrigins=[],trailVelocities=[],trailUV=[],indices=[];
+  const lureOrigin=new T.Vector3(),lureVelocity=new T.Vector3(),viewport=new T.Vector4();
   for(const side of [-1,1]){
     for(let fan=0;fan<3;fan++){
-      if(side===1&&fan===1)lureHead=lags.length;
-      for(let tail=0;tail<8;tail++){
-        origins.push(side*2.8,-.35,2.1);
-        velocities.push(side*(8+5*fan),1.5+fan*3,19-3*fan);
-        lags.push(tail*.024);
+      const origin=[side*2.8,-.35,2.1],velocity=[side*(8+5*fan),1.5+fan*3,19-3*fan];
+      if(side===1&&fan===1){lureOrigin.fromArray(origin);lureVelocity.fromArray(velocity);}
+      // The middle starboard flare releases first and remains the visible interception point.
+      const delay=[.055,0,.105][fan]+(side<0?.018:0),seed=fan*2.13+side*1.37;
+      // A negative emission time marks the glowing head. Other points detach along its path.
+      pointOrigins.push(...origin);pointVelocities.push(...velocity);emissions.push(-1,seed,delay);
+      for(let sample=0;sample<26;sample++){
+        pointOrigins.push(...origin);pointVelocities.push(...velocity);
+        emissions.push(sample*.048,seed+sample*2.4,delay);
+      }
+      const base=trailOrigins.length/3,segments=10;
+      for(let row=0;row<=segments;row++){
+        for(const edge of [-1,1]){
+          trailOrigins.push(...origin);trailVelocities.push(...velocity);trailUV.push(row/segments,edge,delay);
+        }
+        if(row<segments){
+          const v=base+row*2;indices.push(v,v+1,v+2,v+1,v+3,v+2);
+        }
       }
     }
   }
-  geometry.setAttribute('position',new T.Float32BufferAttribute(origins,3));
-  geometry.setAttribute('velocity',new T.Float32BufferAttribute(velocities,3));
-  geometry.setAttribute('lag',new T.Float32BufferAttribute(lags,1));
-  const lureOrigin=new T.Vector3().fromBufferAttribute(geometry.attributes.position,lureHead);
-  const lureVelocity=new T.Vector3().fromBufferAttribute(geometry.attributes.velocity,lureHead);
-  const viewport=new T.Vector4();
+  function geometry(origins,velocities,attr,data){
+    const g=new T.BufferGeometry();
+    g.setAttribute('position',new T.Float32BufferAttribute(origins,3));
+    g.setAttribute('velocity',new T.Float32BufferAttribute(velocities,3));
+    g.setAttribute(attr,new T.Float32BufferAttribute(data,3));
+    return g;
+  }
+  const particles=geometry(pointOrigins,pointVelocities,'emission',emissions);
+  const ribbons=geometry(trailOrigins,trailVelocities,'ribbonData',trailUV);
+  ribbons.setIndex(indices);
+
+  const pathShader=`
+    attribute vec3 velocity;
+    uniform float age,viewportHeight;
+    vec3 path(float t){
+      vec3 p=(modelMatrix*vec4(position+velocity*t,1.)).xyz;
+      p.y-=5.*t*t;
+      return p;
+    }
+    float pixelsPerUnit(vec4 eye){
+      return .5*viewportHeight*projectionMatrix[1][1]/max(.05,-eye.z);
+    }
+  `;
   function cloud(name){
-    const material=new T.ShaderMaterial({
-      uniforms:{age:{value:0},fade:{value:1},viewportHeight:{value:720}},
-      depthWrite:false,transparent:true,toneMapped:false,
-      vertexShader:`
-        attribute vec3 velocity;
-        attribute float lag;
-        uniform float age,viewportHeight;
-        varying float heat;
+    const uniforms={age:{value:0},viewportHeight:{value:720}};
+    const settings={uniforms,transparent:true,depthWrite:false,toneMapped:false};
+    const ribbonMat=new T.ShaderMaterial({...settings,side:T.DoubleSide,
+      vertexShader:pathShader+`
+        attribute vec3 ribbonData;
+        varying vec2 stroke;
+        varying float fade;
         void main(){
-          float t=max(0.0,age-lag);
-          heat=1.0-lag/0.21;
-          vec4 world=modelMatrix*vec4(position+velocity*t,1.0);
-          world.y-=5.0*t*t;
-          vec4 eye=viewMatrix*world;
+          stroke=ribbonData.xy;
+          float elapsed=age-ribbonData.z;
+          float head=clamp(elapsed,0.,${burnTime}),t=head-min(head,.43)*stroke.x;
+          fade=1.-smoothstep(.74,${burnTime},elapsed);
+          vec3 p=path(t);
+          vec4 eye=viewMatrix*vec4(p,1.);
+          vec3 tangent=mat3(viewMatrix)*(path(t+.01)-p);
+          vec2 dir=tangent.xy-tangent.z*eye.xy/min(-.05,eye.z);
+          vec2 normal=vec2(-dir.y,dir.x)*inversesqrt(max(.0000001,dot(dir,dir)));
+          float width=max(.8/pixelsPerUnit(eye),mix(.26,.055,stroke.x));
+          eye.xy+=normal*stroke.y*width;
           gl_Position=projectionMatrix*eye;
-          float scale=viewportHeight*projectionMatrix[1][1]/max(0.1,-eye.z);
-          gl_PointSize=clamp((0.5+1.0*heat)*scale,2.0,72.0);
-          if(lag>age)gl_Position=vec4(2.,2.,2.,1.);
         }`,
       fragmentShader:`
-        varying float heat;
-        uniform float fade;
+        varying vec2 stroke;
+        varying float fade;
         void main(){
-          float radius=length(gl_PointCoord*2.0-1.0);
-          float alpha=(1.0-smoothstep(0.12,1.0,radius))*(0.2+0.8*heat)*fade;
-          if(alpha<0.01)discard;
-          float core=(1.0-smoothstep(0.12,0.64,radius))*heat;
-          gl_FragColor=vec4(mix(vec3(1.,0.31,0.025),vec3(1.,0.94,0.65),core),alpha);
+          float edge=abs(stroke.y),tail=1.-stroke.x;
+          float alpha=(1.-smoothstep(.20,1.,edge))*pow(tail,.64)*fade;
+          vec3 color=mix(vec3(.85,.12,.012),vec3(1.,.78,.37),tail*tail*(1.-edge));
+          gl_FragColor=vec4(color,alpha);
           #include <colorspace_fragment>
         }`
     });
-    const sparks=new T.Points(geometry,material);
-    sparks.name=name;sparks.visible=false;sparks.frustumCulled=false;sparks.renderOrder=8;
-    sparks.onBeforeRender=renderer=>{material.uniforms.viewportHeight.value=renderer.getCurrentViewport(viewport).w;};
-    root.add(sparks);
-    return sparks;
+    ribbonMat.forceSinglePass=true;
+    const pointMat=new T.ShaderMaterial({...settings,
+      vertexShader:pathShader+`
+        attribute vec3 emission;
+        varying float smokeAge,intensity,seed;
+        void main(){
+          bool head=emission.x<0.;
+          float elapsed=age-emission.z;
+          smokeAge=head?-1.:elapsed-emission.x;seed=emission.y;
+          float t=head?clamp(elapsed,0.,${burnTime}):emission.x;
+          vec3 p=path(t);
+          float diameter;
+          if(head){
+            intensity=(1.-smoothstep(.74,${burnTime},elapsed))*(.94+.06*sin(31.*elapsed+seed));
+            diameter=mix(1.,3.5,intensity);
+          }else{
+            float a=max(0.,smokeAge);
+            p+=vec3(.65+sin(seed)*.42,.7+.26*cos(seed),.3*sin(seed+1.))*a;
+            intensity=smoothstep(0.,.09,a)*(1.-smoothstep(.22,${smokeLife},a))*
+                      (1.-smoothstep(.9,${burnTime},t));
+            diameter=(1.05+2.9*a)*(.95+.10*sin(seed));
+          }
+          vec4 eye=viewMatrix*vec4(p,1.);
+          gl_Position=projectionMatrix*eye;
+          gl_PointSize=clamp(diameter*pixelsPerUnit(eye),head?5.:1.,96.);
+          if(elapsed<0.||intensity<.002||(!head&&smokeAge<0.))gl_Position=vec4(2.,2.,2.,1.);
+        }`,
+      fragmentShader:`
+        varying float smokeAge,intensity,seed;
+        void main(){
+          vec2 uv=gl_PointCoord*2.-1.;
+          float r=length(uv);
+          vec3 color;float alpha;
+          if(smokeAge<0.){
+            float hot=exp(-20.*r*r);
+            float glow=1.-smoothstep(.16,1.,r);
+            color=mix(vec3(1.,.29,.024),vec3(1.,.98,.78),exp(-10.*r*r));
+            alpha=(hot+.78*(1.-hot)*glow*glow)*intensity;
+          }else{
+            float cloud=r+.085*sin(6.*uv.x+seed)*sin(5.*uv.y-seed);
+            alpha=.31*intensity*(1.-smoothstep(.14,1.,cloud));
+            color=mix(vec3(.28,.25,.24),vec3(.66,.63,.58),clamp(.55-.38*uv.y+.1*sin(seed),0.,1.));
+          }
+          if(alpha<.005)discard;
+          gl_FragColor=vec4(color,alpha);
+          #include <colorspace_fragment>
+        }`
+    });
+    const trail=new T.Mesh(ribbons,ribbonMat),points=new T.Points(particles,pointMat),group=new T.Group();
+    trail.renderOrder=7;points.renderOrder=8;
+    for(const layer of [trail,points]){
+      layer.frustumCulled=false;
+      layer.onBeforeRender=renderer=>{uniforms.viewportHeight.value=renderer.getCurrentViewport(viewport).w;};
+      group.add(layer);
+    }
+    group.name=name;group.visible=false;root.add(group);
+    return {group,age:uniforms.age};
   }
   const clouds=[cloud('我机干扰弹'),cloud('敌机干扰弹')];
   function burst(enemy,position,quaternion,target,travelTime=0){
-    const sparks=clouds[enemy?1:0],uniforms=sparks.material.uniforms;
-    sparks.position.copy(position);
-    if(quaternion)sparks.quaternion.copy(quaternion);else sparks.quaternion.identity();
-    uniforms.age.value=0;uniforms.fade.value=1;sparks.visible=true;
+    const {group,age}=clouds[enemy?1:0];
+    group.position.copy(position);
+    if(quaternion)group.quaternion.copy(quaternion);else group.quaternion.identity();
+    age.value=0;group.visible=true;
     if(target){
-      // The shader adds its downward arc after transforming the spark into world space.
-      sparks.updateWorldMatrix(true,false);
-      target.copy(lureOrigin).addScaledVector(lureVelocity,travelTime).applyMatrix4(sparks.matrixWorld);
+      group.updateWorldMatrix(true,false);
+      target.copy(lureOrigin).addScaledVector(lureVelocity,travelTime).applyMatrix4(group.matrixWorld);
       target.y-=5*travelTime*travelTime;
     }
   }
   function step(dt){
-    for(const sparks of clouds){
-      if(!sparks.visible)continue;
-      const uniforms=sparks.material.uniforms;
-      uniforms.age.value+=dt;
-      uniforms.fade.value=Math.min(1,Math.max(0,(duration-uniforms.age.value)/.55));
-      sparks.visible=uniforms.age.value<duration;
+    for(const {group,age} of clouds){
+      if(!group.visible)continue;
+      age.value+=dt;group.visible=age.value<duration;
     }
   }
-  function reset(){for(const sparks of clouds)sparks.visible=false;}
+  function reset(){for(const {group} of clouds)group.visible=false;}
   return {burst,step,reset};
 }

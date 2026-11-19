@@ -216,32 +216,32 @@ kbd{display:inline-flex;align-items:center;justify-content:center;font:10px/1.18
 .range-card[data-feedback=win] .range-current b{color:#afe5cb}
 #targetMark.enemy i{width:18px;height:18px;border:1.5px solid #ffac91;border-radius:1px;transform:rotate(45deg)}
 #targetMark.enemy span{color:#ffd9c9}
+#targetMark.label-left span{position:absolute;right:calc(100% + 6px)}
+.wreck-view .aircraft-title{display:none}
 #targetMark.enemy.aligned i{border-color:#aeffe5;box-shadow:inset 0 0 4px #80ffd855}
 #targetMark.enemy.aligned span{color:#c4ffed}
-.shield-pair{display:flex;justify-content:space-between;gap:10px}
-.shield-pair>span{display:flex;align-items:center;gap:5px;font-size:11px;color:#d3dbd3;white-space:nowrap}
-.shield-pair meter{appearance:none;display:block;border:0;width:46px;height:6px;background:#40504d;--shield:#9de1cd;mask-image:repeating-linear-gradient(90deg,black 0,black calc(33.333% - 2px),transparent calc(33.333% - 2px),transparent 33.333%)}
-#enemyShield{--shield:#fa9c82}
-.shield-pair meter::-webkit-meter-bar{background:#40504d;border:0;border-radius:0;height:100%}
-.shield-pair meter::-webkit-meter-optimum-value{background:var(--shield)}
-.shield-pair meter::-moz-meter-bar{background:var(--shield)}
+.aircraft-condition{display:flex;justify-content:space-between;gap:10px}
+.aircraft-condition>span{display:flex;align-items:center;gap:5px;font-size:11px;color:#d3dbd3;white-space:nowrap}
+.aircraft-condition b{font-size:11px;font-weight:650;color:#b0d8c5}
+.aircraft-condition b[data-hp="2"]{color:#ecc886}
+.aircraft-condition b[data-hp="1"],.aircraft-condition b[data-hp="0"]{color:#ffab92}
 @media(min-width:761px) and (min-height:571px){
   .view-cockpit .range-card[data-mission=duel]{grid-template-columns:max-content max-content auto minmax(138px,170px) 1fr;gap:12px}
   .view-cockpit .range-card[data-mission=duel]:has(#flare:not([hidden])){grid-template-columns:auto auto auto auto auto minmax(0,1fr)}
-  .view-cockpit .shield-pair{flex-wrap:wrap;max-width:95px;gap:2px}
-  .view-cockpit .range-card[data-mission=duel]:has(.shield-pair[hidden]){grid-template-columns:max-content max-content minmax(138px,170px) 1fr}
+  .view-cockpit .aircraft-condition{flex-wrap:wrap;max-width:95px;gap:2px}
+  .view-cockpit .range-card[data-mission=duel]:has(.aircraft-condition[hidden]){grid-template-columns:max-content max-content minmax(138px,170px) 1fr}
 }
 @media(max-width:760px),(max-height:570px){
   .range-card[data-mission=duel] .range-heading{grid-area:1/1}
   .range-card[data-mission=duel] .range-selection{grid-area:1/2}
   .range-card[data-mission=duel] #fire{grid-area:1/3}
-  .range-card[data-mission=duel] .shield-pair{grid-area:2/1/3/3;justify-content:start}
+  .range-card[data-mission=duel] .aircraft-condition{grid-area:2/1/3/3;justify-content:start}
   .range-card[data-mission=duel] #flare{grid-area:2/3;min-width:84px}
   .range-card[data-mission=duel] #rangeHint{grid-area:3/1/4/-1}
-  .range-card[data-mission=duel]:has(.shield-pair[hidden]) #rangeHint{grid-row:2}
+  .range-card[data-mission=duel]:has(.aircraft-condition[hidden]) #rangeHint{grid-row:2}
 }
 @media(max-height:570px) and (min-width:521px){
-  .range-card[data-mission=duel] .shield-pair{grid-area:1/4;justify-content:center}
+  .range-card[data-mission=duel] .aircraft-condition{grid-area:1/4;justify-content:center}
   .range-card[data-mission=duel] #rangeHint{grid-area:2/1/3/-1}
   .range-card[data-mission=duel] #flare{grid-area:2/4;min-height:26px}
   .range-card[data-mission=duel]:has(#flare:not([hidden])) #rangeHint{grid-column:1/4}
